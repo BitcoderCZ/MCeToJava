@@ -15,8 +15,9 @@ namespace MCeToJava
 	{
 		static void Main(string[] args)
 		{
-			// TODO: add option to change the biome
-			// TODO: add option to export to normal world - generate level.dat - void generator or for fountain - generate buildplate_metadata.json
+			// TODO: add cli option to change the biome
+			// TODO: add cli option to export to normal world - generate level.dat - void generator or for fountain - generate buildplate_metadata.json
+			// TODO: optimize Chunk by not adding data when there is only 1 palette entry
 
 			Log.Logger = new LoggerConfiguration()
 				.WriteTo.Console()
