@@ -16,7 +16,7 @@ namespace MCeToJava
 		static void Main(string[] args)
 		{
 			// TODO: add option to change the biome
-			// TODO: add option to not use fountain blocks
+			// TODO: add option to export to normal world - generate level.dat - void generator or for fountain - generate buildplate_metadata.json
 
 			Log.Logger = new LoggerConfiguration()
 				.WriteTo.Console()
