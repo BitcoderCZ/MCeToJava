@@ -3,6 +3,7 @@ using SharpNBT;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -12,10 +13,11 @@ namespace MCeToJava
 {
 	internal sealed class WorldData
 	{
-		private const int TimestampOffset = 1024 * 4;
-		private const int HeaderLength = (1024 * 4) + (1024 * 4);
+		private const int TimestampOffset = 0x1000;
+		private const int HeaderLength = 0x1000 + 0x1000;
+		private const int ChunkSize = 0x1000;
 
-		private readonly Dictionary<string, byte[]> _files = [];
+		public readonly Dictionary<string, byte[]> Files = [];
 
 		public WorldData()
 		{
@@ -36,7 +38,7 @@ namespace MCeToJava
 				using (MemoryStream ms = new MemoryStream())
 				{
 					entryStream.CopyTo(ms);
-					_files.Add(entry.FullName, ms.ToArray());
+					Files.Add(entry.FullName, ms.ToArray());
 				}
 			}
 		}
@@ -56,14 +58,25 @@ namespace MCeToJava
 			using (ZLibStream zlib = new ZLibStream(ms, CompressionLevel.SmallestSize))
 			using (TagWriter writer = new TagWriter(zlib, FormatOptions.Java))
 			{
+				// compound type
+				zlib.WriteByte(10);
+
+				// name length
+				Debug.Assert(string.IsNullOrEmpty(tag.Name));
+				zlib.WriteByte(0);
+				zlib.WriteByte(0);
+
 				writer.WriteTag(tag);
+				zlib.Flush();
+
+				ms.Position = 0;
 
 				int dataLength = (int)ms.Length;
 				int totalLength = dataLength + 5;
-				int paddedLength = totalLength % 0x2000 == 0 ? totalLength : totalLength + (0x2000 - (totalLength % 0x2000));
+				int paddedLength = totalLength % ChunkSize == 0 ? totalLength : totalLength + (ChunkSize - (totalLength % ChunkSize));
 
 				int index;
-				if (_files.TryGetValue(fileName, out var bytes))
+				if (Files.TryGetValue(fileName, out var bytes))
 				{
 					byte[] newBytes = new byte[bytes.Length + paddedLength];
 					Buffer.BlockCopy(bytes, 0, newBytes, 0, bytes.Length);
@@ -71,28 +84,28 @@ namespace MCeToJava
 					index = bytes.Length;
 
 					bytes = newBytes;
-					_files[fileName] = bytes;
+					Files[fileName] = bytes;
 				}
 				else
 				{
 					bytes = new byte[HeaderLength + paddedLength];
 					index = HeaderLength;
 
-					_files.Add(fileName, bytes);
+					Files.Add(fileName, bytes);
 				}
 
 				int indexInHeader = chunkIndex * 4;
 
-				int headerIndex = index / 0x2000;
+				int headerIndex = index / ChunkSize;
 				bytes[indexInHeader + 2] = (byte)((headerIndex >> 0) & byte.MaxValue);
 				bytes[indexInHeader + 1] = (byte)((headerIndex >> 8) & byte.MaxValue);
 				bytes[indexInHeader + 0] = (byte)((headerIndex >> 24) & byte.MaxValue);
 
-				bytes[indexInHeader + 3] = (byte)(paddedLength / 0x2000);
+				bytes[indexInHeader + 3] = (byte)(paddedLength / ChunkSize);
 
-				BinaryPrimitives.WriteInt32BigEndian(bytes[(indexInHeader + TimestampOffset)..], (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+				BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan(indexInHeader + TimestampOffset), (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
-				BinaryPrimitives.WriteInt32BigEndian(bytes[index..], dataLength);
+				BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan(index), dataLength);
 				bytes[index + 4] = 2; // compression type, 2 - zlib
 
 				ms.Read(bytes, index + 5, (int)ms.Length);
@@ -107,13 +120,13 @@ namespace MCeToJava
 			int chunkZ = z & 31;
 			int chunkIndex = (chunkZ << 5) | chunkX;
 
-			using MemoryStream ms = new MemoryStream(_files[$"region/r.{regionX}.{regionZ}.mca"]);
+			using MemoryStream ms = new MemoryStream(Files[$"region/r.{regionX}.{regionZ}.mca"]);
 			using BinaryReader reader = new BinaryReader(ms);
 
 			ms.Seek(chunkIndex * 4, SeekOrigin.Begin);
 			int offset = (int)(reader.ReadUInt32BE() >> 8);
 
-			ms.Seek(offset * 4096, SeekOrigin.Begin);
+			ms.Seek(offset * ChunkSize, SeekOrigin.Begin);
 
 			int length = (int)reader.ReadUInt32BE();
 			byte compressionType = reader.ReadByte();
@@ -156,9 +169,16 @@ namespace MCeToJava
 			}
 		}
 
-		public ZipArchive GetAsZip()
+		public void WriteToStream(Stream stream)
 		{
-			throw new NotImplementedException();
+			using ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, true);
+
+			foreach (var (path, data) in Files)
+			{
+				var entry = archive.CreateEntry(path, CompressionLevel.SmallestSize);
+				using var entryStream = entry.Open();
+				entryStream.Write(data);
+			}
 		}
 	}
 }

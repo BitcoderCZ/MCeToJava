@@ -16,8 +16,12 @@ namespace MCeToJava.Registry
 {
 	internal static class JavaBlocks
 	{
-		private static readonly Dictionary<int, string> map = new();
+		private static readonly Dictionary<int, string> idToNameAndState = new();
 		private static readonly Dictionary<string, List<string>> nonVanillaStatesList = new();
+
+		private static readonly Dictionary<int, string> bedrockToNameAndState = new();
+
+		private static readonly Dictionary<string, string> nameToDefaultNameAndState = new();
 
 		private static readonly Dictionary<int, BedrockMapping> bedrockMap = new();
 		private static readonly Dictionary<string, BedrockMapping> bedrockMapByName = new();
@@ -29,9 +33,9 @@ namespace MCeToJava.Registry
 			{
 				JsonObject obj = item!.AsObject();
 				int id = obj["id"]!.GetValue<int>();
-				string name = obj["name"]!.GetValue<string>();
+				string nameAndSate = obj["name"]!.GetValue<string>();
 
-				if (!map.TryAdd(id, name))
+				if (!idToNameAndState.TryAdd(id, nameAndSate))
 				{
 					Log.Warning($"Duplicate Java block ID {id}");
 				}
@@ -46,14 +50,16 @@ namespace MCeToJava.Registry
 					}
 
 					bedrockMap[id] = bedrockMapping;
-					bedrockMapByName[name] = bedrockMapping;
+					bedrockMapByName[nameAndSate] = bedrockMapping;
+					bedrockToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
+					int bracketIndex = nameAndSate.IndexOf('[');
+					nameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate.Substring(0, bracketIndex), nameAndSate);
 				}
 				catch (BedrockMappingFailException ex)
 				{
-					Log.Warning($"Cannot find Bedrock block for Java block {name}: {ex}");
+					Log.Warning($"Cannot find Bedrock block for Java block {nameAndSate}: {ex}");
 				}
 			}
-
 
 			foreach (var item in nonvanillaRoot)
 			{
@@ -71,7 +77,7 @@ namespace MCeToJava.Registry
 					string stateName = stateObject["name"]!.GetValue<string>();
 					stateNames.Add(stateName);
 
-					String name = baseName + stateName;
+					string name = baseName + stateName;
 
 					try
 					{
@@ -83,6 +89,7 @@ namespace MCeToJava.Registry
 						}
 
 						bedrockNonVanillaMap[name] = bedrockMapping;
+						bedrockToNameAndState.TryAdd(bedrockMapping.Id, baseName);
 					}
 					catch (BedrockMappingFailException ex)
 					{
@@ -131,7 +138,7 @@ namespace MCeToJava.Registry
 				}
 			}
 
-			int id = BedrockBlocks.getId(name, state);
+			int id = BedrockBlocks.GetId(name, state);
 			if (id == -1)
 			{
 				throw new BedrockMappingFailException("Cannot find Bedrock block with provided name and state");
@@ -243,12 +250,12 @@ namespace MCeToJava.Registry
 			return new BedrockMapping(id, waterlogged, blockEntity, extraData);
 		}
 
-		public static int getMaxVanillaBlockId()
+		public static int GetMaxVanillaBlockId()
 		{
-			return map.Count > 0 ? map.Keys.Max() : -1;
+			return idToNameAndState.Count > 0 ? idToNameAndState.Keys.Max() : -1;
 		}
 
-		public static List<string>? getStatesForNonVanillaBlock(string name)
+		public static List<string>? GetStatesForNonVanillaBlock(string name)
 		{
 			if (nonVanillaStatesList.TryGetValue(name, out var states))
 			{
@@ -272,9 +279,9 @@ namespace MCeToJava.Registry
 			return getBedrockMapping(javaId, null);
 		}*/
 
-		public static string? getName(int id/*, FabricRegistryManager? fabricRegistryManager*/)
+		public static string? GetName(int id/*, FabricRegistryManager? fabricRegistryManager*/)
 		{
-			if (map.TryGetValue(id, out string? name))
+			if (idToNameAndState.TryGetValue(id, out string? name))
 			{
 				return name;
 			}
@@ -288,7 +295,7 @@ namespace MCeToJava.Registry
 			}
 		}
 
-		public static BedrockMapping? getBedrockMapping(int javaId/*, FabricRegistryManager? fabricRegistryManager*/)
+		public static BedrockMapping? GetBedrockMapping(int javaId/*, FabricRegistryManager? fabricRegistryManager*/)
 		{
 			if (bedrockMap.TryGetValue(javaId, out var bedrockMapping))
 			{
@@ -308,7 +315,7 @@ namespace MCeToJava.Registry
 			}
 		}
 
-		public static BedrockMapping? getBedrockMapping(string javaName)
+		public static BedrockMapping? GetBedrockMapping(string javaName)
 		{
 			if (bedrockMapByName.TryGetValue(javaName, out var bedrockMapping) || bedrockNonVanillaMap.TryGetValue(javaName, out bedrockMapping))
 			{
@@ -320,8 +327,30 @@ namespace MCeToJava.Registry
 			}
 		}
 
+		public static string? GetNameAndState(int bedrockId)
+		{
+			if (bedrockToNameAndState.TryGetValue(bedrockId, out string? nameAndState))
+			{
+				return nameAndState;
+			}
+			else
+			{
+				// fallback
+				var name = BedrockBlocks.GetName(bedrockId);
+				if (!string.IsNullOrEmpty(name) && nameToDefaultNameAndState.TryGetValue(name, out nameAndState))
+				{
+					return nameAndState;
+				}
+			}
+
+			return null;
+		}
+
 		internal sealed class BedrockMapping
 		{
+			/// <summary>
+			/// Bedrock id of the block.
+			/// </summary>
 			public readonly int Id;
 			public readonly bool Waterlogged;
 			public readonly BlockEntityBase? BlockEntity;

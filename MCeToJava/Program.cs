@@ -16,6 +16,7 @@ namespace MCeToJava
 		static void Main(string[] args)
 		{
 			// TODO: add option to change the biome
+			// TODO: add option to not use fountain blocks
 
 			Log.Logger = new LoggerConfiguration()
 				.WriteTo.Console()
@@ -23,12 +24,14 @@ namespace MCeToJava
 				.MinimumLevel.Debug()
 				.CreateLogger();
 
+#if RELEASE
 			AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) =>
 			{
 				Log.Fatal($"Unhandeled exception: {e.ExceptionObject}");
 				Log.CloseAndFlush();
 				Environment.Exit(1);
 			};
+#endif
 
 			WorldData world;
 			using (FileStream fs = new FileStream("java_input", FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -38,7 +41,7 @@ namespace MCeToJava
 
 			var s = (ListTag)a["sections"];
 
-			var bs = s.SelectMany<Tag, Tag>(tag =>
+			var bs = s.SelectMany(tag =>
 			{
 				if (tag is CompoundTag ct && ct.ContainsKey("block_states"))
 				{
@@ -51,8 +54,6 @@ namespace MCeToJava
 			var s1 = s[0];
 			var s2 = s[^2];
 
-			sbyte ss = unchecked((sbyte)(byte)251);
-
 			InitRegistry();
 
 			Buildplate? buildplate = U.DeserializeJson<Buildplate>(File.ReadAllText("input"));
@@ -62,7 +63,16 @@ namespace MCeToJava
 				throw new ConvertException("Invalid json - buildplate is null.");
 			}
 
-			Converter.Convert(buildplate);
+			WorldData data = Converter.Convert(buildplate);
+			using (FileStream fs = new FileStream("out.zip", FileMode.Create, FileAccess.Write, FileShare.Read))
+			{
+				data.WriteToStream(fs);
+			}
+			
+			using (FileStream fs = new FileStream("out.zip", FileMode.Open, FileAccess.Read, FileShare.Read))
+				data = new WorldData(fs);
+			
+			var a2 = data.GetChunkNBT(0, 0);
 
 			Console.WriteLine("Done");
 			Console.ReadKey();

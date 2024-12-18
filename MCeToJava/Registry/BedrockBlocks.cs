@@ -17,6 +17,7 @@ namespace MCeToJava.Registry
 	{
 		private static readonly Dictionary<BlockNameAndState, int> stateToIdMap = new();
 		private static readonly Dictionary<int, BlockNameAndState> idToStateMap = new();
+		private static readonly Dictionary<string, int> nameToId = new();
 
 		public static int AIR { get; private set; }
 		public static int WATER { get; private set; }
@@ -50,19 +51,26 @@ namespace MCeToJava.Registry
 					Log.Warning($"Duplicate Bedrock block name/state {name}");
 				}
 
+				nameToId.TryAdd(name, id);
+
 				if (!idToStateMap.TryAdd(id, blockNameAndState))
 				{
 					Log.Warning($"Duplicate Bedrock block ID {id}");
 				}
 			}
 
-			AIR = getId("minecraft:air", new());
+			AIR = GetId("minecraft:air", new());
 			Dictionary<string, object> hashMap = new();
 			hashMap["liquid_depth"] = 0;
-			WATER = getId("minecraft:water", hashMap);
+			WATER = GetId("minecraft:water", hashMap);
 		}
 
-		public static int getId(string name, Dictionary<string, object> state)
+		public static int GetId(string name)
+		{
+			return nameToId.GetOrDefault(name, -1);
+		}
+
+		public static int GetId(string name, Dictionary<string, object> state)
 		{
 			BlockNameAndState blockNameAndState = new BlockNameAndState(name, state);
 			return stateToIdMap.GetOrDefault(blockNameAndState, -1);

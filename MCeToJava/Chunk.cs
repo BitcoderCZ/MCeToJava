@@ -1,4 +1,5 @@
 ﻿using MCeToJava.NBT;
+using MCeToJava.Registry;
 using MCeToJava.Utils;
 using SharpNBT;
 using System;
@@ -23,12 +24,24 @@ namespace MCeToJava
 		public readonly int[] blocks = new int[16 * 256 * 16];
 		public readonly NbtMap?[] blockEntities = new NbtMap[16 * 256 * 16];
 
+		public Chunk(int x, int z)
+		{
+			chunkX = x;
+			chunkZ = z;
+
+			Array.Fill(blocks, BedrockBlocks.AIR);
+		}
+
 		public CompoundTag ToTag()
 		{
 			CompoundTag tag = new CompoundTag(null);
 
 			tag["xPos"] = new IntTag("xPos", chunkX);
 			tag["zPos"] = new IntTag("zPos", chunkZ);
+
+			tag["Status"] = new StringTag("Status", "minecraft:full");
+			tag["DataVersion"] = new IntTag("DataVersion", 3700);
+			tag["isLightOn"] = new ByteTag("isLightOn", 1);
 
 			ListTag sections = new ListTag("sections", TagType.Compound);
 			tag["sections"] = sections;
@@ -49,7 +62,7 @@ namespace MCeToJava
 				Array.Fill<byte>(skylight, 255);
 				section["SkyLight"] = new ByteArrayTag("SkyLight", skylight);
 
-				if (i is not -5 and 20)
+				if (i != -5 && i != 20)
 				{
 					CompoundTag biomes = new CompoundTag("biomes");
 
@@ -64,17 +77,12 @@ namespace MCeToJava
 
 					CompoundTag blockStates = new CompoundTag("block_states");
 
-					if (i is < 0 or >= 16)
-					{
 						ListTag statePalette = new ListTag("palette", TagType.Compound)
 						{
 							new CompoundTag(null, [new StringTag("Name", "fountain:solid_air")])
 						};
-					}
-					else
-					{
-						ListTag statePalette = new ListTag("palette", TagType.Compound);
-					}
+
+						blockStates["palette"] = statePalette;
 
 					section["block_states"] = blockStates;
 				}
@@ -94,7 +102,7 @@ namespace MCeToJava
 
 				ListTag paletteTag = (ListTag)blockStatesTag["palette"];
 
-				Debug.Assert(paletteTag.Count == 0);
+				paletteTag.Clear();
 
 				Dictionary<int, int> bedrockPalette = [];
 				int[] blocks = GC.AllocateUninitializedArray<int>(BlockPerSubChunk);
@@ -106,15 +114,19 @@ namespace MCeToJava
 						for (int z = 0; z < 16; z++)
 						{
 							int id = this.blocks[(x * 256 + (y + chunkOffset)) * 16 + z];
-							blocks[x * 256 + y * 16 + z] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
+							//blocks[z * 256 + y * 16 + x] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
+							blocks[y * 256 + x * 16 + z] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
 						}
 					}
 				}
-				for (int i = 0; i < BlockPerSubChunk; i++)
+
+				foreach (var (id, _) in bedrockPalette)
 				{
-					int id = this.blocks[i + chunkOffset];
-					blocks[i] = palette.ComputeIfAbsent(blockId, _ => palette.Count)
+					string? nameAndState = JavaBlocks.GetNameAndState(id);
+					paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AIR)));
 				}
+
+				blockStatesTag["data"] = WriteBitArray(blocks, bedrockPalette.Count, "data");
 			}
 
 			return tag;
@@ -123,6 +135,12 @@ namespace MCeToJava
 		/// <exception cref="Exception"></exception>
 		private static CompoundTag WritePaletteEntry(ReadOnlySpan<char> name)
 		{
+			Debug.Assert(name.Length > 0);
+			if (name.StartsWith("fountain"))
+			{
+				name = "minecraft:air"; // TODO: remove when not testing
+			}
+
 			CompoundTag tag = new CompoundTag(null);
 
 			int bracketIndex = name.IndexOf('[');
@@ -173,7 +191,6 @@ namespace MCeToJava
 		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHAT GPT CODE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		private static LongArrayTag WriteBitArray(int[] data, int maxValue, string tagName)
 		{
-			Debug.Fail("VERIFY THAT THIS WORKS!!!!");
 			int bits = 4;
 			for (int bits1 = 4; bits1 <= 64; bits1++)
 			{
