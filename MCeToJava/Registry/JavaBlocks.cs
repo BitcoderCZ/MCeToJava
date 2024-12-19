@@ -1,16 +1,7 @@
 ﻿using MCeToJava.NBT;
-using MCeToJava.Utils;
 using Serilog;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace MCeToJava.Registry
 {
@@ -144,7 +135,7 @@ namespace MCeToJava.Registry
 				throw new BedrockMappingFailException("Cannot find Bedrock block with provided name and state");
 			}
 
-			bool waterlogged = bedrockMappingObject.ContainsKey("waterlogged") ? bedrockMappingObject["waterlogged"]!.GetValue<bool>() : false;
+			bool waterlogged = bedrockMappingObject.ContainsKey("waterlogged") && bedrockMappingObject["waterlogged"]!.GetValue<bool>();
 
 			BedrockMapping.BlockEntityBase? blockEntity = null;
 			if (bedrockMappingObject.ContainsKey("block_entity"))

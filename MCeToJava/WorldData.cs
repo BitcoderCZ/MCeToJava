@@ -1,13 +1,8 @@
 ﻿using MCeToJava.Utils;
 using SharpNBT;
-using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava
 {

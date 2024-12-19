@@ -1,11 +1,6 @@
 ﻿using MCeToJava.Utils;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace MCeToJava.NBT
 {
@@ -310,7 +305,7 @@ namespace MCeToJava.NBT
 				consumer.Invoke(nm);
 		}
 
-	
+
 		public override bool Equals(object? o)
 		{
 			if (o == this)

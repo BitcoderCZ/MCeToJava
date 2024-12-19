@@ -1,15 +1,9 @@
 ﻿using MCeToJava.NBT;
 using MCeToJava.Utils;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace MCeToJava.Registry
 {
@@ -67,6 +61,11 @@ namespace MCeToJava.Registry
 
 		public static int GetId(string name)
 		{
+			if (name == "fountain:solid_air")
+			{
+				return Chunk.SolidAirId;
+			}
+
 			return nameToId.GetOrDefault(name, -1);
 		}
 

@@ -1,18 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using MathUtils.Vectors;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace MCeToJava.Models.MCE
 {
-	internal record Buildplate(Guid Id, string ETag, DateTime LastUpdated, bool IsModified, bool Locked, long NumberOfBlocks, long RequiredLevel, Guid TemplateId, Buildplate.Gamemode Type, string Model)
-    {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum Gamemode
-        {
-            Survival,
-        }
-    }
+	internal record Buildplate(Guid Id, string ETag, DateTime LastUpdated, bool IsModified, bool Locked, long NumberOfBlocks, long RequiredLevel, Guid TemplateId, Buildplate.Gamemode Type, string Model, int3 Offset, Buildplate.Flat2 Dimension, double BlocksPerMeter, Buildplate.Orientation SurfaceOrientation, int Order)
+	{
+		[JsonConverter(typeof(JsonStringEnumConverter))]
+		public enum Gamemode
+		{
+			Survival,
+		}
+
+		public record struct Flat2(int X, int Z);
+
+		[JsonConverter(typeof(JsonStringEnumConverter))]
+		public enum Orientation
+		{
+			Horizontal,
+			Vertical,
+		}
+	}
 }

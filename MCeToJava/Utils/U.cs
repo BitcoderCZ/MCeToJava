@@ -1,10 +1,5 @@
 ﻿using MCeToJava.Converters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace MCeToJava.Utils
 {
@@ -23,7 +18,7 @@ namespace MCeToJava.Utils
 		public static T? DeserializeJson<T>(ReadOnlySpan<byte> utf8Json)
 			=> JsonSerializer.Deserialize<T>(utf8Json, DefaultJsonOptions);
 
-        public static string SerializeJson<T>(T value)
-            => JsonSerializer.Serialize(value, DefaultJsonOptions);
-    }
+		public static string SerializeJson<T>(T value)
+			=> JsonSerializer.Serialize(value, DefaultJsonOptions);
+	}
 }

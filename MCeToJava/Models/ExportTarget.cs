@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MCeToJava.Models
+﻿namespace MCeToJava.Models
 {
-    internal enum ExportTarget
-    {
-        Java,
-        Vienna,
-    }
+	internal enum ExportTarget
+	{
+		Java,
+		Vienna,
+	}
 }

@@ -1,9 +1,4 @@
 ﻿using MCeToJava.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava.NBT
 {
@@ -41,15 +36,15 @@ namespace MCeToJava.NBT
 			Enumeration = enumeration;
 		}
 
-        public Type TagClass { get; private set; }
+		public Type TagClass { get; private set; }
 
-        public Enum Enumeration { get; private set; }
+		public Enum Enumeration { get; private set; }
 
-        public int Id => (int)Enumeration;
+		public int Id => (int)Enumeration;
 
 		public string TypeName => Enumeration.GetName();
 
-        public static NbtType FromId(int id)
+		public static NbtType FromId(int id)
 		{
 			if (id >= 0 && id < BY_ID.Length)
 			{

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Buffers.Binary;
-using System.Collections.Generic;
+﻿using System.Buffers.Binary;
 using System.Diagnostics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava.Utils
 {
@@ -15,12 +11,12 @@ namespace MCeToJava.Utils
 			reader.ReadChecked(buffer);
 			uint res1 = BinaryPrimitives.ReadUInt32BigEndian(buffer);
 
-            buffer.Reverse();
-            uint res2 = BitConverter.ToUInt32(buffer);
+			buffer.Reverse();
+			uint res2 = BitConverter.ToUInt32(buffer);
 
 			Debug.Assert(res1 == res2); // if this doesn't fail, remove res2
 			return res1;
-        }
+		}
 
 		private static void ReadChecked(this BinaryReader reader, Span<byte> buffer)
 		{

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava.NBT
 {
@@ -56,8 +52,8 @@ namespace MCeToJava.NBT
 			return o.ToString()!;
 		}
 
-        [return: NotNullIfNotNull(nameof(val))]
-        public static T? Clone<T>(T? val)
+		[return: NotNullIfNotNull(nameof(val))]
+		public static T? Clone<T>(T? val)
 		{
 			if (val is byte[] bytes)
 				return (T)bytes.Clone();
