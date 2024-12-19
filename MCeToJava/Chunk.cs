@@ -110,7 +110,7 @@ namespace MCeToJava
                         for (int z = 0; z < 16; z++)
                         {
                             int id = this.blocks[(x * 256 + (y + chunkOffset)) * 16 + z];
-                            blocks[y * 256 + x * 16 + z] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
+                            blocks[y * 256 + z * 16 + x] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
                         }
                     }
                 }
