@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MCeToJava.Utils
 {
-	internal sealed class NbtBuilder
+	internal static class NbtBuilder
 	{
 		public sealed class Compound
 		{

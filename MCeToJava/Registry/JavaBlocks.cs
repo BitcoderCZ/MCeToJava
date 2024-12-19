@@ -178,34 +178,34 @@ namespace MCeToJava.Registry
 
 									if (element is not null)
 									{
-										NbtMapBuilder builder = NbtMap.builder();
-										builder.putString("name", element["name"]!.GetValue<string>());
+										NbtMapBuilder builder = NbtMap.CreateBuilder();
+										builder.PutString("name", element["name"]!.GetValue<string>());
 										if (element.ContainsKey("state"))
 										{
-											NbtMapBuilder stateBuilder = NbtMap.builder();
+											NbtMapBuilder stateBuilder = NbtMap.CreateBuilder();
 											foreach (var (key, stateElement) in element["state"]!.AsObject())
 											{
 												switch (stateElement!.GetValueKind())
 												{
 													case JsonValueKind.String:
-														stateBuilder.putString(key, stateElement.GetValue<string>());
+														stateBuilder.PutString(key, stateElement.GetValue<string>());
 														break;
 													case JsonValueKind.True:
-														stateBuilder.putInt(key, 1);
+														stateBuilder.PutInt(key, 1);
 														break;
 													case JsonValueKind.False:
-														stateBuilder.putInt(key, 0);
+														stateBuilder.PutInt(key, 0);
 														break;
 													default:
-														stateBuilder.putInt(key, stateElement.GetValue<int>());
+														stateBuilder.PutInt(key, stateElement.GetValue<int>());
 														break;
 												}
 											}
 
-											builder.putCompound("states", stateBuilder.build());
+											builder.PutCompound("states", stateBuilder.Build());
 										}
 
-										contents = builder.build();
+										contents = builder.Build();
 									}
 								}
 								if (contents == null)

@@ -13,32 +13,32 @@ namespace MCeToJava
 {
 	internal static class JsonNbtConverter
 	{
-		public static NbtMap convert(CompoundJsonNbtTag tag)
+		public static NbtMap Convert(CompoundJsonNbtTag tag)
 		{
 			Dictionary<string, object> value = new();
 			foreach (var entry in (Dictionary<string, JsonNbtTag>)tag.value)
-				value[entry.Key] = convert(entry.Value);
+				value[entry.Key] = Convert(entry.Value);
 
 			return new NbtMap(value);
 		}
 
-		public static NbtList convert(ListJsonNbtTag tag)
+		public static NbtList Convert(ListJsonNbtTag tag)
 		{
 			List<object> value = new();
 			foreach (JsonNbtTag item in (JsonNbtTag[])tag.value)
-				value.Add(convert(item));
+				value.Add(Convert(item));
 
 			Debug.Assert(value.Count > 0);
 
-			return new NbtList(NbtType.byClass(value[0].GetType()), value);
+			return new NbtList(NbtType.FromClass(value[0].GetType()), value);
 		}
 
-		private static object convert(JsonNbtTag tag)
+		private static object Convert(JsonNbtTag tag)
 		{
 			if (tag is CompoundJsonNbtTag map)
-				return convert(map);
+				return Convert(map);
 			else if (tag is ListJsonNbtTag list)
-				return convert(list);
+				return Convert(list);
 			else if (tag is IntJsonNbtTag i)
 				return i.value;
 			else if (tag is ByteJsonNbtTag b)

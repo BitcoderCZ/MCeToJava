@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MCeToJava
 {
-    internal static class ErrorCodes
+    internal static class ErrorCode
     {
         public const int Success = 0;
         public const int CliParseError = 1;

@@ -66,7 +66,7 @@ namespace MCeToJava
 
             foreach (var (pos, chunk) in chunks)
             {
-                worldData.AddChunk(pos.X, pos.Y, chunk.ToTag());
+                worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(exportTarget));
             }
 
             switch (exportTarget)

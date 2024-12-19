@@ -1,4 +1,5 @@
-﻿using MCeToJava.NBT;
+﻿using MCeToJava.Models;
+using MCeToJava.NBT;
 using MCeToJava.Registry;
 using MCeToJava.Utils;
 using SharpNBT;
@@ -12,212 +13,204 @@ using System.Xml.Linq;
 
 namespace MCeToJava
 {
-	// https://minecraft.wiki/w/Chunk_format
-	internal sealed class Chunk
-	{
-		private const int BlockPerSubChunk = 16 * 16 * 16;
+    // https://minecraft.wiki/w/Chunk_format
+    internal sealed class Chunk
+    {
+        private const int BlockPerSubChunk = 16 * 16 * 16;
 
-		public readonly int chunkX;
-		public readonly int chunkZ;
+        public readonly int chunkX;
+        public readonly int chunkZ;
 
-		// bedrock ids
-		public readonly int[] blocks = new int[16 * 256 * 16];
-		public readonly NbtMap?[] blockEntities = new NbtMap[16 * 256 * 16];
+        // bedrock ids
+        public readonly int[] blocks = new int[16 * 256 * 16];
+        public readonly NbtMap?[] blockEntities = new NbtMap[16 * 256 * 16];
 
-		public Chunk(int x, int z)
-		{
-			chunkX = x;
-			chunkZ = z;
+        public Chunk(int x, int z)
+        {
+            chunkX = x;
+            chunkZ = z;
 
-			Array.Fill(blocks, BedrockBlocks.AIR);
-		}
+            Array.Fill(blocks, BedrockBlocks.AIR);
+        }
 
-		public CompoundTag ToTag()
-		{
-			CompoundTag tag = new CompoundTag(null);
+        public CompoundTag ToTag(ExportTarget exportTarget)
+        {
+            CompoundTag tag = new CompoundTag(null);
 
-			tag["xPos"] = new IntTag("xPos", chunkX);
-			tag["zPos"] = new IntTag("zPos", chunkZ);
+            tag["xPos"] = new IntTag("xPos", chunkX);
+            tag["zPos"] = new IntTag("zPos", chunkZ);
 
-			tag["Status"] = new StringTag("Status", "minecraft:full");
-			tag["DataVersion"] = new IntTag("DataVersion", 3700);
-			tag["isLightOn"] = new ByteTag("isLightOn", 1);
+            tag["Status"] = new StringTag("Status", "minecraft:full");
+            tag["DataVersion"] = new IntTag("DataVersion", 3700);
+            tag["isLightOn"] = new ByteTag("isLightOn", 1);
 
-			ListTag sections = new ListTag("sections", TagType.Compound);
-			tag["sections"] = sections;
+            ListTag sections = new ListTag("sections", TagType.Compound);
+            tag["sections"] = sections;
 
-			// 251(-5) - 255(-1), 0-20
-			// actually sbyte
-			// 5 +21 = 26
+            // init sections
+            for (sbyte i = -5; i <= 20; i++)
+            {
+                CompoundTag section = new CompoundTag(null);
 
+                section["Y"] = new ByteTag("Y", unchecked((byte)i));
 
-			// init sections
-			for (sbyte i = -5; i <= 20; i++)
-			{
-				CompoundTag section = new CompoundTag(null);
+                byte[] skylight = GC.AllocateUninitializedArray<byte>(2048);
+                Array.Fill<byte>(skylight, 255);
+                section["SkyLight"] = new ByteArrayTag("SkyLight", skylight);
 
-				section["Y"] = new ByteTag("Y", unchecked((byte)i));
+                if (i != -5 && i != 20)
+                {
+                    CompoundTag biomes = new CompoundTag("biomes");
 
-				byte[] skylight = GC.AllocateUninitializedArray<byte>(2048);
-				Array.Fill<byte>(skylight, 255);
-				section["SkyLight"] = new ByteArrayTag("SkyLight", skylight);
+                    ListTag biomePalette = new ListTag("palette", TagType.String)
+                    {
+                        new StringTag(null, "minecraft:plains")
+                    };
 
-				if (i != -5 && i != 20)
-				{
-					CompoundTag biomes = new CompoundTag("biomes");
+                    biomes["palette"] = biomePalette;
 
-					ListTag biomePalette = new ListTag("palette", TagType.String)
-					{
-						new StringTag(null, "minecraft:plains")
-					};
+                    section["biomes"] = biomes;
 
-					biomes["palette"] = biomePalette;
+                    CompoundTag blockStates = new CompoundTag("block_states");
 
-					section["biomes"] = biomes;
+                    ListTag statePalette = new ListTag("palette", TagType.Compound)
+                    {
+                        new CompoundTag(null, [new StringTag("Name", "fountain:solid_air")])
+                    };
 
-					CompoundTag blockStates = new CompoundTag("block_states");
+                    blockStates["palette"] = statePalette;
 
-						ListTag statePalette = new ListTag("palette", TagType.Compound)
-						{
-							new CompoundTag(null, [new StringTag("Name", "fountain:solid_air")])
-						};
+                    section["block_states"] = blockStates;
+                }
 
-						blockStates["palette"] = statePalette;
+                sections.Add(section);
+            }
 
-					section["block_states"] = blockStates;
-				}
+            for (int subchunkY = 0; subchunkY < 16; subchunkY++)
+            {
+                int sectionIndex = subchunkY + 4 + 1; // Java world height starts at -64, plus one section for bottommost lighting
 
-				sections.Add(section);
-			}
+                int chunkOffset = subchunkY * 16;
 
-			for (int subchunkY = 0; subchunkY < 16; subchunkY++)
-			{
-				int sectionIndex = subchunkY + 4 + 1; // Java world height starts at -64, plus one section for bottommost lighting
+                CompoundTag sectionTag = (CompoundTag)sections[sectionIndex];
 
-				int chunkOffset = subchunkY * 16;
+                CompoundTag blockStatesTag = (CompoundTag)sectionTag["block_states"];
 
-				CompoundTag sectionTag = (CompoundTag)sections[sectionIndex];
+                ListTag paletteTag = (ListTag)blockStatesTag["palette"];
 
-				CompoundTag blockStatesTag = (CompoundTag)sectionTag["block_states"];
+                paletteTag.Clear();
 
-				ListTag paletteTag = (ListTag)blockStatesTag["palette"];
+                Dictionary<int, int> bedrockPalette = [];
+                int[] blocks = GC.AllocateUninitializedArray<int>(BlockPerSubChunk);
 
-				paletteTag.Clear();
+                for (int x = 0; x < 16; x++)
+                {
+                    for (int y = 0; y < 16; y++)
+                    {
+                        for (int z = 0; z < 16; z++)
+                        {
+                            int id = this.blocks[(x * 256 + (y + chunkOffset)) * 16 + z];
+                            blocks[y * 256 + x * 16 + z] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
+                        }
+                    }
+                }
 
-				Dictionary<int, int> bedrockPalette = [];
-				int[] blocks = GC.AllocateUninitializedArray<int>(BlockPerSubChunk);
+                foreach (var (id, _) in bedrockPalette)
+                {
+                    string? nameAndState = JavaBlocks.GetNameAndState(id);
+                    paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AIR), exportTarget));
+                }
 
-				for (int x = 0; x < 16; x++)
-				{
-					for (int y = 0; y < 16; y++)
-					{
-						for (int z = 0; z < 16; z++)
-						{
-							int id = this.blocks[(x * 256 + (y + chunkOffset)) * 16 + z];
-							//blocks[z * 256 + y * 16 + x] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
-							blocks[y * 256 + x * 16 + z] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
-						}
-					}
-				}
+                blockStatesTag["data"] = WriteBitArray(blocks, bedrockPalette.Count, "data");
+            }
 
-				foreach (var (id, _) in bedrockPalette)
-				{
-					string? nameAndState = JavaBlocks.GetNameAndState(id);
-					paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AIR)));
-				}
+            return tag;
+        }
 
-				blockStatesTag["data"] = WriteBitArray(blocks, bedrockPalette.Count, "data");
-			}
+        /// <exception cref="Exception"></exception>
+        private static CompoundTag WritePaletteEntry(ReadOnlySpan<char> name, ExportTarget exportTarget)
+        {
+            Debug.Assert(name.Length > 0);
+            if (exportTarget != ExportTarget.Vienna && name.StartsWith("fountain"))
+            {
+                name = "minecraft:air";
+            }
 
-			return tag;
-		}
+            CompoundTag tag = new CompoundTag(null);
 
-		/// <exception cref="Exception"></exception>
-		private static CompoundTag WritePaletteEntry(ReadOnlySpan<char> name)
-		{
-			Debug.Assert(name.Length > 0);
-			if (name.StartsWith("fountain"))
-			{
-				name = "minecraft:air"; // TODO: remove when not testing
-			}
+            int bracketIndex = name.IndexOf('[');
 
-			CompoundTag tag = new CompoundTag(null);
+            if (bracketIndex == -1)
+            {
+                tag["Name"] = new StringTag("Name", new string(name));
+                return tag;
+            }
 
-			int bracketIndex = name.IndexOf('[');
+            tag["Name"] = new StringTag("Name", new string(name[..bracketIndex]));
 
-			if (bracketIndex == -1)
-			{
-				tag["Name"] = new StringTag("Name", new string(name));
-				return tag;
-			}
+            name = name[(bracketIndex + 1)..^1];
 
-			tag["Name"] = new StringTag("Name", new string(name[..bracketIndex]));
+            CompoundTag properties = new CompoundTag("Properties");
+            tag["Properties"] = properties;
 
-			name = name[(bracketIndex + 1)..^1];
+            while (true)
+            {
+                int commaIndex = name.IndexOf(',');
 
-			CompoundTag properties = new CompoundTag("Properties");
-			tag["Properties"] = properties;
+                if (commaIndex == -1)
+                {
+                    commaIndex = name.Length;
+                }
 
-			while (true)
-			{
-				int commaIndex = name.IndexOf(',');
+                int equalsIndex = name.IndexOf('=');
+                Debug.Assert(equalsIndex != -1);
+                Debug.Assert(equalsIndex < commaIndex);
 
-				if (commaIndex == -1)
-				{
-					commaIndex = name.Length;
-				}
+                string propName = new string(name[..equalsIndex]);
+                string propVal = new string(name[(equalsIndex + 1)..commaIndex]);
 
-				int equalsIndex = name.IndexOf('=');
-				Debug.Assert(equalsIndex != -1);
-				Debug.Assert(equalsIndex < commaIndex);
+                properties.Add(new StringTag(propName, propVal));
 
-				string propName = new string(name[..equalsIndex]);
-				string propVal = new string(name[(equalsIndex + 1)..commaIndex]);
+                if (commaIndex == name.Length)
+                {
+                    break;
+                }
 
-				properties.Add(new StringTag(propName, propVal));
+                name = name[(commaIndex + 1)..];
+            }
 
-				if (commaIndex == name.Length)
-				{
-					break;
-				}
+            return tag;
+        }
 
-				name = name[(commaIndex + 1)..];
-			}
+        private static LongArrayTag WriteBitArray(int[] data, int maxValue, string tagName)
+        {
+            int bits = 4;
+            for (int bits1 = 4; bits1 <= 64; bits1++)
+            {
+                if (maxValue <= (1 << bits1))
+                {
+                    bits = bits1;
+                    break;
+                }
+            }
 
-			return tag;
-		}
+            int valuesPerLong = 64 / bits;
+            long[] longArray = new long[(data.Length + valuesPerLong - 1) / valuesPerLong];
 
-		// tagName - data
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!! CHAT GPT CODE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		private static LongArrayTag WriteBitArray(int[] data, int maxValue, string tagName)
-		{
-			int bits = 4;
-			for (int bits1 = 4; bits1 <= 64; bits1++)
-			{
-				if (maxValue <= (1 << bits1))
-				{
-					bits = bits1;
-					break;
-				}
-			}
+            int dataIndex = 0;
+            for (int i = 0; i < longArray.Length; i++)
+            {
+                long value = 0;
+                for (int j = 0; j < valuesPerLong; j++)
+                {
+                    if (dataIndex >= data.Length) break;
 
-			int valuesPerLong = 64 / bits;
-			long[] longArray = new long[(data.Length + valuesPerLong - 1) / valuesPerLong];
+                    value |= ((long)data[dataIndex++] & ((1L << bits) - 1)) << (j * bits);
+                }
+                longArray[i] = value;
+            }
 
-			int dataIndex = 0;
-			for (int i = 0; i < longArray.Length; i++)
-			{
-				long value = 0;
-				for (int j = 0; j < valuesPerLong; j++)
-				{
-					if (dataIndex >= data.Length) break;
-
-					value |= ((long)data[dataIndex++] & ((1L << bits) - 1)) << (j * bits);
-				}
-				longArray[i] = value;
-			}
-
-			return new LongArrayTag(tagName, longArray);
-		}
-	}
+            return new LongArrayTag(tagName, longArray);
+        }
+    }
 }

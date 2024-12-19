@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -9,10 +10,7 @@ namespace MCeToJava.NBT
 {
 	internal static class NbtUtils
 	{
-		public static readonly int MAX_DEPTH = 16;
-		public static readonly long MAX_READ_SIZE = 0; // Disabled by default
-
-		public static string toString(object o)
+		public static string ToString(object o)
 		{
 			if (o is byte b)
 			{
@@ -40,7 +38,7 @@ namespace MCeToJava.NBT
 			}
 			else if (o is byte[] byteArr)
 			{
-				return "0x" + printHexBinary(byteArr);
+				return "0x" + PrintHexBinary(byteArr);
 			}
 			else if (o is string str)
 			{
@@ -58,7 +56,8 @@ namespace MCeToJava.NBT
 			return o.ToString()!;
 		}
 
-		public static T copy<T>(T val)
+        [return: NotNullIfNotNull(nameof(val))]
+        public static T? Clone<T>(T? val)
 		{
 			if (val is byte[] bytes)
 				return (T)bytes.Clone();
@@ -70,7 +69,8 @@ namespace MCeToJava.NBT
 			return val;
 		}
 
-		public static object copyObject(object val)
+		[return: NotNullIfNotNull(nameof(val))]
+		public static object? CloneObject(object? val)
 		{
 			if (val is byte[] bytes)
 				return bytes.Clone();
@@ -82,7 +82,7 @@ namespace MCeToJava.NBT
 			return val;
 		}
 
-		public static string indent(string str)
+		public static string Indent(string str)
 		{
 			StringBuilder builder = new StringBuilder("  " + str);
 			for (int i = 2; i < builder.Length; i++)
@@ -98,7 +98,7 @@ namespace MCeToJava.NBT
 
 		private static readonly char[] HEX_CODE = "0123456789ABCDEF".ToArray();
 
-		public static string printHexBinary(byte[] data)
+		public static string PrintHexBinary(byte[] data)
 		{
 			StringBuilder r = new StringBuilder(data.Length << 1);
 			foreach (byte b in data)

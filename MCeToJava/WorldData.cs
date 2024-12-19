@@ -44,7 +44,7 @@ namespace MCeToJava
 		}
 
 		// https://minecraft.wiki/w/Region_file_format
-		public void AddChunk(int x, int z, CompoundTag tag)
+		public void AddChunkNBT(int x, int z, CompoundTag tag)
 		{
 			int regionX = x >> 5;
 			int regionZ = z >> 5;
@@ -58,6 +58,7 @@ namespace MCeToJava
 			using (ZLibStream zlib = new ZLibStream(ms, CompressionLevel.SmallestSize))
 			using (TagWriter writer = new TagWriter(zlib, FormatOptions.Java))
 			{
+				// for some reason if the name is empty, the type doesn't get written... wtf, also in this case an empty name is expected
 				// compound type
 				zlib.WriteByte(10);
 
@@ -124,11 +125,11 @@ namespace MCeToJava
 			using BinaryReader reader = new BinaryReader(ms);
 
 			ms.Seek(chunkIndex * 4, SeekOrigin.Begin);
-			int offset = (int)(reader.ReadUInt32BE() >> 8);
+			int offset = (int)(reader.ReadUInt32BigEndian() >> 8);
 
 			ms.Seek(offset * ChunkSize, SeekOrigin.Begin);
 
-			int length = (int)reader.ReadUInt32BE();
+			int length = (int)reader.ReadUInt32BigEndian();
 			byte compressionType = reader.ReadByte();
 			byte[] compressed = new byte[length];
 			ms.Read(compressed);

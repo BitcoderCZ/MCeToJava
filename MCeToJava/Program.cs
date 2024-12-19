@@ -47,7 +47,7 @@ namespace MCeToJava
                 if (string.IsNullOrEmpty(InPath))
                 {
                     Console.WriteLine("Invalid in-path");
-                    return ErrorCodes.CliParseError;
+                    return ErrorCode.CliParseError;
                 }
 
                 string buildplateText;
@@ -58,12 +58,12 @@ namespace MCeToJava
                 catch (FileNotFoundException fileNotFound)
                 {
                     Console.WriteLine($"File '{fileNotFound.FileName}' wasn't found.");
-                    return ErrorCodes.FileNotFound;
+                    return ErrorCode.FileNotFound;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to read input file: {ex}");
-                    return ErrorCodes.UnknownError;
+                    return ErrorCode.UnknownError;
                 }
 
                 Buildplate? buildplate;
@@ -79,7 +79,7 @@ namespace MCeToJava
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to parse input file: {ex}");
-                    return ErrorCodes.UnknownError;
+                    return ErrorCode.UnknownError;
                 }
 
                 try
@@ -89,7 +89,7 @@ namespace MCeToJava
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to initialize block registry: {ex}");
-                    return ErrorCodes.UnknownError;
+                    return ErrorCode.UnknownError;
                 }
 
                 WorldData data;
@@ -100,7 +100,7 @@ namespace MCeToJava
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to convert buildplate: {ex}");
-                    return ErrorCodes.UnknownError;
+                    return ErrorCode.UnknownError;
                 }
 
                 try
@@ -113,10 +113,10 @@ namespace MCeToJava
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to write output file: {ex}");
-                    return ErrorCodes.UnknownError;
+                    return ErrorCode.UnknownError;
                 }
 
-                return ErrorCodes.Success;
+                return ErrorCode.Success;
             }
         }
 
@@ -172,16 +172,16 @@ namespace MCeToJava
 
         private static void InitRegistry()
         {
-            BedrockBlocks.Load(JsonSerializer.Deserialize<JsonArray>(File.ReadAllText(GetPath("blocks_bedrock.json")))!);
+            BedrockBlocks.Load(JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_bedrock.json"))!);
 
             JavaBlocks.Load(
-                JsonSerializer.Deserialize<JsonArray>(File.ReadAllText(GetPath("blocks_java.json")))!,
-                JsonSerializer.Deserialize<JsonArray>(File.ReadAllText(GetPath("blocks_java_nonvanilla.json")))!
+                JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java.json"))!,
+                JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java_nonvanilla.json"))!
             );
 
-            string GetPath(string fileName)
+            string ReadFile(string fileName)
             {
-                return Path.Combine("Data", fileName);
+                return File.ReadAllText(Path.Combine("Data", fileName));
             }
         }
     }

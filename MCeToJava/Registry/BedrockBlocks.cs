@@ -113,16 +113,16 @@ namespace MCeToJava.Registry
 				return null;
 			}
 
-			NbtMapBuilder builder = NbtMap.builder();
+			NbtMapBuilder builder = NbtMap.CreateBuilder();
 			foreach (var (key, value) in blockNameAndState.State)
 			{
 				switch (value)
 				{
 					case string str:
-						builder.putString(key, str);
+						builder.PutString(key, str);
 						break;
 					case int i:
-						builder.putInt(key, i);
+						builder.PutInt(key, i);
 						break;
 					default:
 						Debug.Fail("Invalid type.");
@@ -130,7 +130,7 @@ namespace MCeToJava.Registry
 				}
 			}
 
-			return builder.build();
+			return builder.Build();
 		}
 
 		[DebuggerDisplay("{DebuggerDisplay}")]

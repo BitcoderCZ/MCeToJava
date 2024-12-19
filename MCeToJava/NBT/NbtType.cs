@@ -32,19 +32,24 @@ namespace MCeToJava.NBT
 		static NbtType()
 		{
 			foreach (NbtType type in BY_ID)
-				BY_CLASS.Add(type.getTagClass(), type);
+				BY_CLASS.Add(type.TagClass, type);
 		}
-
-		private readonly Type tagClass;
-		private readonly Enum enumeration;
 
 		private NbtType(Type tagClass, Enum enumeration)
 		{
-			this.tagClass = tagClass;
-			this.enumeration = enumeration;
+			TagClass = tagClass;
+			Enumeration = enumeration;
 		}
 
-		public static NbtType byId(int id)
+        public Type TagClass { get; private set; }
+
+        public Enum Enumeration { get; private set; }
+
+        public int Id => (int)Enumeration;
+
+		public string TypeName => Enumeration.GetName();
+
+        public static NbtType FromId(int id)
 		{
 			if (id >= 0 && id < BY_ID.Length)
 			{
@@ -56,34 +61,13 @@ namespace MCeToJava.NBT
 			}
 		}
 
-		public static NbtType byClass(Type tagClass)
+		public static NbtType FromClass(Type tagClass)
 		{
 			NbtType? type = BY_CLASS.GetOrDefault(tagClass);
 			if (type == null)
 				throw new ArgumentException("Tag of class " + tagClass + " does not exist", nameof(tagClass));
 
 			return type;
-		}
-
-
-		public Type getTagClass()
-		{
-			return tagClass;
-		}
-
-		public int getId()
-		{
-			return (int)enumeration;
-		}
-
-		public string getTypeName()
-		{
-			return enumeration.getName();
-		}
-
-		public Enum getEnum()
-		{
-			return enumeration;
 		}
 
 		public enum Enum : int
@@ -106,7 +90,7 @@ namespace MCeToJava.NBT
 
 	internal static class NbtType_EnumExtensions
 	{
-		public static string getName(this NbtType.Enum e)
+		public static string GetName(this NbtType.Enum e)
 			=> "TAG_" + Enum.GetName(e);
 	}
 }

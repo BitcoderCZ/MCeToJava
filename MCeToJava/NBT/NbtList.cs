@@ -13,56 +13,47 @@ namespace MCeToJava.NBT
 	{
 		public static readonly NbtList EMPTY = new NbtList(NbtType.END);
 
-		private readonly NbtType type;
-		private readonly Array array;
-		[JsonIgnore]
-		private bool hashCodeGenerated;
-		[JsonIgnore]
-		private int hashCode;
+		private readonly NbtType _type;
+		private readonly Array _array;
 
 		public bool IsFixedSize => true;
 
 		public bool IsReadOnly => true;
 
-		public int Count => array.Length;
+		public int Count => _array.Length;
 
 		public bool IsSynchronized => false;
 
 		public object SyncRoot => null!;
 
-		public object? this[int index] { get => get(index); set => throw new InvalidOperationException(); }
+		public object? this[int index] { get => Get(index); set => throw new InvalidOperationException(); }
 
 		public NbtList(NbtType type, ICollection collection)
 		{
-			ArgumentNullException.ThrowIfNull(type, "tagClass");
-			this.type = type;
-			array = Array.CreateInstance(type.getTagClass(), collection.Count);
-			collection.CopyTo(array, 0);
+			ArgumentNullException.ThrowIfNull(type);
+			_type = type;
+			_array = Array.CreateInstance(type.TagClass, collection.Count);
+			collection.CopyTo(_array, 0);
 		}
 
 		public NbtList(NbtType tagClass, params object[] array)
 		{
-			ArgumentNullException.ThrowIfNull(type, "tagClass");
-			type = tagClass;
-			this.array = (Array)array.Clone();
+			ArgumentNullException.ThrowIfNull(_type, "tagClass");
+			_type = tagClass;
+			_array = (Array)array.Clone();
 		}
 
 		public NbtType getType()
 		{
-			return type;
+			return _type;
 		}
 
-		public object get(int index)
+		public object Get(int index)
 		{
-			if (index < 0 || index >= array.Length)
-				throw new IndexOutOfRangeException("Expected 0-" + (array.Length - 1) + ". Got " + index);
+			if (index < 0 || index >= _array.Length)
+				throw new IndexOutOfRangeException("Expected 0-" + (_array.Length - 1) + ". Got " + index);
 
-			return NbtUtils.copy(array.GetValue(index)!);
-		}
-
-		public int size()
-		{
-			return array.Length;
+			return NbtUtils.Clone(_array.GetValue(index)!);
 		}
 
 		public int Add(object? value)
@@ -77,12 +68,12 @@ namespace MCeToJava.NBT
 
 		public bool Contains(object? value)
 		{
-			return Array.IndexOf(array, value) >= 0;
+			return Array.IndexOf(_array, value) >= 0;
 		}
 
 		public int IndexOf(object? value)
 		{
-			return Array.IndexOf(array, value);
+			return Array.IndexOf(_array, value);
 		}
 
 		public void Insert(int index, object? value)
@@ -102,12 +93,12 @@ namespace MCeToJava.NBT
 
 		public void CopyTo(Array array, int index)
 		{
-			this.array.CopyTo(array, index);
+			_array.CopyTo(array, index);
 		}
 
 		public IEnumerator GetEnumerator()
 		{
-			return array.GetEnumerator();
+			return _array.GetEnumerator();
 		}
 	}
 }

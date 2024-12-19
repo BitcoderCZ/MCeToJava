@@ -13,10 +13,6 @@ namespace MCeToJava.NBT
 	{
 		public static readonly NbtMap EMPTY = new NbtMap();
 
-		private static readonly byte[] EMPTY_BYTE_ARRAY = new byte[0];
-		private static readonly int[] EMPTY_INT_ARRAY = new int[0];
-		private static readonly long[] EMPTY_LONG_ARRAY = new long[0];
-
 		internal readonly IDictionary<string, object> map;
 
 		public int Count => map.Count;
@@ -36,51 +32,38 @@ namespace MCeToJava.NBT
 			this.map = map;
 		}
 
-		public static NbtMapBuilder builder()
+		public static NbtMapBuilder CreateBuilder()
 		{
 			return new NbtMapBuilder();
 		}
 
-		public static NbtMap fromMap(IDictionary<string, object> map)
-		{
-			return new NbtMap(map.AsReadOnly());
-		}
-
-		public NbtMapBuilder toBuilder()
+		public NbtMapBuilder ToBuilder()
 		{
 			return NbtMapBuilder.from(this);
 		}
 
-		public bool containsKey(string key)
+		public bool ContainsKey(string key)
 			=> map.ContainsKey(key);
-		public bool containsKey(string key, NbtType type)
+
+		public bool ContainsKey(string key, NbtType type)
 		{
 			if (map.TryGetValue(key, out object? o))
-				return o.GetType() == type.getTagClass();
+				return o.GetType() == type.TagClass;
 			else
 				return false;
 		}
 
-		public object get(string key)
+		public object? Get(string key)
 		{
-			return NbtUtils.copyObject(map.GetOrDefault(key));
+			return NbtUtils.CloneObject(map.GetOrDefault(key));
 		}
 
-		public ICollection<string> keySet()
-			=> map.Keys;
-
-		public ICollection<KeyValuePair<string, object>> entrySet()
-			=> map;
-
-		public ICollection<object> values()
-			=> map.Values;
-
-		public bool getbool(string key)
+		public bool GetBool(string key)
 		{
-			return getbool(key, false);
+			return GetBool(key, false);
 		}
 
-		public bool getbool(string key, bool defaultValue)
+		public bool GetBool(string key, bool defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is byte b)
@@ -89,19 +72,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForbool(string key, Action<bool> consumer)
+		public void ListenForBool(string key, Action<bool> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is byte b)
 				consumer.Invoke(b != 0);
 		}
 
-		public byte getByte(string key)
+		public byte GetByte(string key)
 		{
-			return getByte(key, 0);
+			return GetByte(key, 0);
 		}
 
-		public byte getByte(string key, byte defaultValue)
+		public byte GetByte(string key, byte defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is byte b)
@@ -110,19 +93,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForByte(string key, Action<byte> consumer)
+		public void ListenForByte(string key, Action<byte> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is byte b)
 				consumer.Invoke(b);
 		}
 
-		public short getShort(string key)
+		public short GetShort(string key)
 		{
-			return getShort(key, 0);
+			return GetShort(key, 0);
 		}
 
-		public short getShort(string key, short defaultValue)
+		public short GetShort(string key, short defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is short s)
@@ -131,19 +114,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForShort(string key, Action<short> consumer)
+		public void ListenForShort(string key, Action<short> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is short s)
 				consumer.Invoke(s);
 		}
 
-		public int getInt(string key)
+		public int GetInt(string key)
 		{
-			return getInt(key, 0);
+			return GetInt(key, 0);
 		}
 
-		public int getInt(string key, int defaultValue)
+		public int GetInt(string key, int defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is int i)
@@ -152,19 +135,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForInt(string key, Action<int> consumer)
+		public void ListenForInt(string key, Action<int> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is int i)
 				consumer.Invoke(i);
 		}
 
-		public long getLong(string key)
+		public long GetLong(string key)
 		{
-			return getLong(key, 0L);
+			return GetLong(key, 0L);
 		}
 
-		public long getLong(string key, long defaultValue)
+		public long GetLong(string key, long defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is long l)
@@ -173,19 +156,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForLong(string key, Action<long> consumer)
+		public void ListenForLong(string key, Action<long> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is long l)
 				consumer.Invoke(l);
 		}
 
-		public float getFloat(string key)
+		public float GetFloat(string key)
 		{
-			return getFloat(key, 0F);
+			return GetFloat(key, 0F);
 		}
 
-		public float getFloat(string key, float defaultValue)
+		public float GetFloat(string key, float defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is float f)
@@ -194,19 +177,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForFloat(string key, Action<float> consumer)
+		public void ListenForFloat(string key, Action<float> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is float f)
 				consumer.Invoke(f);
 		}
 
-		public double getDouble(string key)
+		public double GetDouble(string key)
 		{
-			return getDouble(key, 0.0);
+			return GetDouble(key, 0.0);
 		}
 
-		public double getDouble(string key, double defaultValue)
+		public double GetDouble(string key, double defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is double d)
@@ -215,19 +198,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForDouble(string key, Action<double> consumer)
+		public void ListenForDouble(string key, Action<double> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is double d)
 				consumer.Invoke(d);
 		}
 
-		public string? getString(string key)
+		public string? GetString(string key)
 		{
-			return getstring(key, "");
+			return Getstring(key, string.Empty);
 		}
 
-		public string? getstring(string key, string? defaultValue)
+		public string? Getstring(string key, string? defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is string s)
@@ -236,7 +219,7 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForstring(string key, Action<string> consumer)
+		public void ListenForstring(string key, Action<string> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is string s)
@@ -245,10 +228,10 @@ namespace MCeToJava.NBT
 
 		public byte[]? getByteArray(string key)
 		{
-			return getByteArray(key, EMPTY_BYTE_ARRAY);
+			return GetByteArray(key, Array.Empty<byte>());
 		}
 
-		public byte[]? getByteArray(string key, byte[]? defaultValue)
+		public byte[]? GetByteArray(string key, byte[]? defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is byte[] bytes)
@@ -257,19 +240,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForByteArray(string key, Action<byte[]> consumer)
+		public void ListenForByteArray(string key, Action<byte[]> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is byte[] bytes)
 				consumer.Invoke((byte[])bytes.Clone());
 		}
 
-		public int[]? getIntArray(string key)
+		public int[]? GetIntArray(string key)
 		{
-			return getIntArray(key, EMPTY_INT_ARRAY);
+			return GetIntArray(key, Array.Empty<int>());
 		}
 
-		public int[]? getIntArray(string key, int[]? defaultValue)
+		public int[]? GetIntArray(string key, int[]? defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is int[] ints)
@@ -278,19 +261,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForIntArray(string key, Action<int[]> consumer)
+		public void ListenForIntArray(string key, Action<int[]> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is int[] ints)
 				consumer.Invoke((int[])ints.Clone());
 		}
 
-		public long[]? getLongArray(string key)
+		public long[]? GetLongArray(string key)
 		{
-			return getLongArray(key, EMPTY_LONG_ARRAY);
+			return GetLongArray(key, Array.Empty<long>());
 		}
 
-		public long[]? getLongArray(string key, long[]? defaultValue)
+		public long[]? GetLongArray(string key, long[]? defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is long[] longs)
@@ -299,19 +282,19 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForLongArray(string key, Action<long[]> consumer)
+		public void ListenForLongArray(string key, Action<long[]> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is long[] longs)
 				consumer.Invoke((long[])longs.Clone());
 		}
 
-		public NbtMap? getCompound(string key)
+		public NbtMap? GetCompound(string key)
 		{
-			return getCompound(key, EMPTY);
+			return GetCompound(key, EMPTY);
 		}
 
-		public NbtMap? getCompound(string key, NbtMap? defaultValue)
+		public NbtMap? GetCompound(string key, NbtMap? defaultValue)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is NbtMap nm)
@@ -320,7 +303,7 @@ namespace MCeToJava.NBT
 			return defaultValue;
 		}
 
-		public void listenForCompound(string key, Action<NbtMap> consumer)
+		public void ListenForCompound(string key, Action<NbtMap> consumer)
 		{
 			object? tag = map.GetOrDefault(key);
 			if (tag is NbtMap nm)
@@ -333,9 +316,7 @@ namespace MCeToJava.NBT
 			if (o == this)
 				return true;
 
-			if (o is not NbtMap m)
-				return false;
-			if (m.Count != Count)
+			if (o is not NbtMap m || m.Count != Count)
 				return false;
 
 			if (hashCodeGenerated && m.hashCodeGenerated && hashCode != ((NbtMap)o).hashCode)
@@ -343,18 +324,18 @@ namespace MCeToJava.NBT
 
 			try
 			{
-				foreach (var e in entrySet())
+				foreach (var e in map)
 				{
 					string key = e.Key;
 					object value = e.Value;
 					if (value == null)
 					{
-						if (!(m.get(key) == null && m.containsKey(key)))
+						if (!(m.Get(key) == null && m.ContainsKey(key)))
 							return false;
 					}
 					else
 					{
-						if (!ObjectUtils.DeepEquals(value, m.get(key)))
+						if (!ObjectUtils.DeepEquals(value, m.Get(key)))
 							return false;
 					}
 				}
@@ -373,8 +354,8 @@ namespace MCeToJava.NBT
 				return hashCode;
 
 			int h = 0;
-			foreach (var stringobjectEntry in map)
-				h += stringobjectEntry.GetHashCode();
+			foreach (var item in map)
+				h += item.GetHashCode();
 
 			hashCode = h;
 			hashCodeGenerated = true;
@@ -383,10 +364,10 @@ namespace MCeToJava.NBT
 
 		public override string ToString()
 		{
-			return mapToString(map);
+			return MapToString(map);
 		}
 
-		internal static string mapToString(IDictionary<string, object> map)
+		internal static string MapToString(IDictionary<string, object> map)
 		{
 			if (map.Count == 0)
 				return "{}";
@@ -396,16 +377,18 @@ namespace MCeToJava.NBT
 
 			IEnumerator<KeyValuePair<string, object>> enumerator = map.GetEnumerator();
 			enumerator.MoveNext();
+
 			for (; ; )
 			{
 				var e = enumerator.Current;
 				string key = e.Key;
-				string value = NbtUtils.toString(e.Value);
+				string value = NbtUtils.ToString(e.Value);
 
-				string str = NbtUtils.indent("\"" + key + "\": " + value);
+				string str = NbtUtils.Indent("\"" + key + "\": " + value);
 				sb.Append(str);
 				if (!enumerator.MoveNext())
 					return sb.Append('\n').Append('}').ToString();
+
 				sb.Append(',').Append('\n');
 			}
 		}
