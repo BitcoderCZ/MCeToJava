@@ -22,5 +22,8 @@ namespace MCeToJava.Utils
 
 		public static T? DeserializeJson<T>(ReadOnlySpan<byte> utf8Json)
 			=> JsonSerializer.Deserialize<T>(utf8Json, DefaultJsonOptions);
-	}
+
+        public static string SerializeJson<T>(T value)
+            => JsonSerializer.Serialize(value, DefaultJsonOptions);
+    }
 }
