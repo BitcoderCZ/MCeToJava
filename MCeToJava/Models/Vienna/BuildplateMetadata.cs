@@ -6,7 +6,5 @@ using System.Threading.Tasks;
 
 namespace MCeToJava.Models.Vienna
 {
-    internal record BuildplateMetadata(int Version, int Size, int Offset, bool Night)
-    {
-    }
+    internal record BuildplateMetadata(int Version, int Size, int Offset, bool Night);
 }

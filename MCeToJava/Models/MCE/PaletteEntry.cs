@@ -6,13 +6,5 @@ using System.Threading.Tasks;
 
 namespace MCeToJava.Models.MCE
 {
-	internal struct PaletteEntry
-	{
-		// afaik ushort, but might actually be uint, idk...
-		public ushort Data;
-		public string Name;
-
-		public override string ToString()
-			=> $"'{Name}', {Data}";
-	}
+	internal record struct PaletteEntry(ushort Data, string Name);
 }

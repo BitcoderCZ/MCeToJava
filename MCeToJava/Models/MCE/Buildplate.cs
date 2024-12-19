@@ -7,25 +7,12 @@ using System.Threading.Tasks;
 
 namespace MCeToJava.Models.MCE
 {
-	internal sealed class Buildplate
-	{
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-		public Guid Id;
-		public string ETag;
-		public DateTime LastUpdated;
-		public bool IsModified;
-		public bool Locked;
-		public long NumberOfBlocks;
-		public long RequiredLevel;
-		public Guid TemplateId;
-		public Gamemode Type;
-		public string Model;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-
-		[JsonConverter(typeof(JsonStringEnumConverter))]
-		public enum Gamemode
-		{
-			Survival,
-		}
-	}
+	internal record Buildplate(Guid Id, string ETag, DateTime LastUpdated, bool IsModified, bool Locked, long NumberOfBlocks, long RequiredLevel, Guid TemplateId, Buildplate.Gamemode Type, string Model)
+    {
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum Gamemode
+        {
+            Survival,
+        }
+    }
 }

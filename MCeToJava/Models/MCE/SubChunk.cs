@@ -8,12 +8,5 @@ using System.Threading.Tasks;
 
 namespace MCeToJava.Models.MCE
 {
-	internal sealed class SubChunk
-	{
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-		[JsonPropertyName("block_palette")] public PaletteEntry[] BlockPalette;
-		public int[] Blocks;
-		public int3 Position;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-	}
+	internal record SubChunk([property: JsonPropertyName("block_palette")] PaletteEntry[] BlockPalette, int[] Blocks, int3 Position);
 }
