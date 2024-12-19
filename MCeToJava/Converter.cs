@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace MCeToJava
 {
-    internal sealed class Converter
+    internal static class Converter
     {
         private const int CHUNK_RADIUS = 2;
 
