@@ -36,9 +36,9 @@ namespace MCeToJava
 
             [Option('t', "target")]
             [HelpText("The target to export to, additional files are generated depending on this setting.")]
-            public ExportTarget ExportType { get; set; } = ExportTarget.Vienna;
+            public ExportTarget ExportTarget { get; set; } = ExportTarget.Vienna;
 
-            [Option('n', "night")]
+            [Option("night")]
             [HelpText("If the world's time be at night.")]
             public bool Night { get; set; } = false;
 
@@ -95,7 +95,7 @@ namespace MCeToJava
                 WorldData data;
                 try
                 {
-                    data = Converter.Convert(buildplate, ExportType, Biome, Night);
+                    data = Converter.Convert(buildplate, ExportTarget, Biome, Night);
                 }
                 catch (Exception ex)
                 {
@@ -123,7 +123,9 @@ namespace MCeToJava
         static int Main(string[] args)
         {
             // TODO: optimize Chunk by not adding data when there is only 1 palette entry
+#if DEBUG
             Debugger.Launch();
+#endif
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
                 .WriteTo.File("logs/debug.txt", rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true, fileSizeLimitBytes: 8338607, outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
