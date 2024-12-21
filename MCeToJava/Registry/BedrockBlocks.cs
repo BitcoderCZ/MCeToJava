@@ -87,6 +87,7 @@ internal static class BedrockBlocks
 		}
 	}
 
+	// not needed
 	public static Dictionary<string, object>? GetState(int id)
 	{
 		if (idToStateMap.TryGetValue(id, out var blockNameAndState))
@@ -105,6 +106,7 @@ internal static class BedrockBlocks
 		}
 	}
 
+	// not needed
 	public static NbtMap? GetStateNbt(int id)
 	{
 		if (!idToStateMap.TryGetValue(id, out var blockNameAndState))

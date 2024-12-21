@@ -82,7 +82,7 @@ internal static partial class Converter
 			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag());
 		}
 
-		Log.Information("Filling regin files with empty chunks");
+		Log.Information("Filling region files with empty chunks");
 		FillWithAirChunks(worldData, buildplate.Offset.Y);
 
 		switch (exportTarget)

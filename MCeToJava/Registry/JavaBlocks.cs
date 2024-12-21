@@ -8,15 +8,10 @@ namespace MCeToJava.Registry;
 internal static class JavaBlocks
 {
 	private static readonly Dictionary<int, string> idToNameAndState = new();
-	private static readonly Dictionary<string, List<string>> nonVanillaStatesList = new();
 
 	private static readonly Dictionary<int, string> bedrockToNameAndState = new();
 
 	private static readonly Dictionary<string, string> nameToDefaultNameAndState = new();
-
-	private static readonly Dictionary<int, BedrockMapping> bedrockMap = new();
-	private static readonly Dictionary<string, BedrockMapping> bedrockMapByName = new();
-	private static readonly Dictionary<string, BedrockMapping> bedrockNonVanillaMap = new();
 
 	public static void Load(JsonArray vanillaRoot, JsonArray nonvanillaRoot)
 	{
@@ -33,15 +28,13 @@ internal static class JavaBlocks
 
 			try
 			{
-				BedrockMapping? bedrockMapping = readBedrockMapping(obj["bedrock"]!.AsObject(), vanillaRoot);
+				BedrockMapping? bedrockMapping = ReadBedrockMapping(obj["bedrock"]!.AsObject(), vanillaRoot);
 
 				if (bedrockMapping is null)
 				{
 					continue;
 				}
 
-				bedrockMap[id] = bedrockMapping;
-				bedrockMapByName[nameAndSate] = bedrockMapping;
 				bedrockToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
 				int bracketIndex = nameAndSate.IndexOf('[');
 				nameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate.Substring(0, bracketIndex), nameAndSate);
@@ -72,14 +65,13 @@ internal static class JavaBlocks
 
 				try
 				{
-					BedrockMapping? bedrockMapping = readBedrockMapping(stateObject["bedrock"]!.AsObject(), null);
+					BedrockMapping? bedrockMapping = ReadBedrockMapping(stateObject["bedrock"]!.AsObject(), null);
 
 					if (bedrockMapping is null)
 					{
 						continue;
 					}
 
-					bedrockNonVanillaMap[name] = bedrockMapping;
 					bedrockToNameAndState.TryAdd(bedrockMapping.Id, baseName);
 				}
 				catch (BedrockMappingFailException ex)
@@ -87,16 +79,11 @@ internal static class JavaBlocks
 					Log.Warning($"Cannot find Bedrock block for Java block {name}: {ex}");
 				}
 			}
-
-			if (!nonVanillaStatesList.TryAdd(baseName, stateNames))
-			{
-				Log.Warning($"Duplicate Java non-vanilla block name {baseName}");
-			}
 		}
 	}
 
 	/// <exception cref="BedrockMappingFailException"></exception>
-	private static BedrockMapping? readBedrockMapping(JsonObject bedrockMappingObject, JsonArray? javaBlocksArray)
+	private static BedrockMapping? ReadBedrockMapping(JsonObject bedrockMappingObject, JsonArray? javaBlocksArray)
 	{
 		if (bedrockMappingObject.ContainsKey("ignore") && bedrockMappingObject["ignore"]!.GetValue<bool>())
 		{
@@ -241,76 +228,12 @@ internal static class JavaBlocks
 		return new BedrockMapping(id, waterlogged, blockEntity, extraData);
 	}
 
-	public static int GetMaxVanillaBlockId()
-	{
-		return idToNameAndState.Count > 0 ? idToNameAndState.Keys.Max() : -1;
-	}
-
-	public static List<string>? GetStatesForNonVanillaBlock(string name)
-	{
-		if (nonVanillaStatesList.TryGetValue(name, out var states))
-		{
-			return states;
-		}
-		else
-		{
-			return null;
-		}
-	}
-
-	/*[Obsolete]
-	public static string? getName(int id)
-	{
-		return getName(id, null);
-	}
-
-	[Obsolete]
-	public static BedrockMapping? getBedrockMapping(int javaId)
-	{
-		return getBedrockMapping(javaId, null);
-	}*/
-
-	public static string? GetName(int id/*, FabricRegistryManager? fabricRegistryManager*/)
+	// not needed
+	public static string? GetName(int id)
 	{
 		if (idToNameAndState.TryGetValue(id, out string? name))
 		{
 			return name;
-		}
-		/*else if (fabricRegistryManager != null)
-		{
-			return fabricRegistryManager.GetBlockName(id);
-		}*/
-		else
-		{
-			return null;
-		}
-	}
-
-	public static BedrockMapping? GetBedrockMapping(int javaId/*, FabricRegistryManager? fabricRegistryManager*/)
-	{
-		if (bedrockMap.TryGetValue(javaId, out var bedrockMapping))
-		{
-			return bedrockMapping;
-		}
-		/*else if (fabricRegistryManager != null)
-		{
-			string fabricName = fabricRegistryManager.GetBlockName(javaId);
-			if (fabricName != null)
-			{
-				bedrockMapping = bedrockNonVanillaMap.GetOrDefault(fabricName, null);
-			}
-		}*/
-		else
-		{
-			return null;
-		}
-	}
-
-	public static BedrockMapping? GetBedrockMapping(string javaName)
-	{
-		if (bedrockMapByName.TryGetValue(javaName, out var bedrockMapping) || bedrockNonVanillaMap.TryGetValue(javaName, out bedrockMapping))
-		{
-			return bedrockMapping;
 		}
 		else
 		{
