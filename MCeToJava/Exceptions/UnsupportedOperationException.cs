@@ -1,16 +1,15 @@
-﻿namespace MCeToJava.Exceptions
+﻿namespace MCeToJava.Exceptions;
+
+internal sealed class UnsupportedOperationException : Exception
 {
-	internal sealed class UnsupportedOperationException : Exception
+	public UnsupportedOperationException()
+		: base()
 	{
-		public UnsupportedOperationException()
-			: base()
-		{
 
-		}
-		public UnsupportedOperationException(string? message)
-			: base(message)
-		{
+	}
+	public UnsupportedOperationException(string? message)
+		: base(message)
+	{
 
-		}
 	}
 }

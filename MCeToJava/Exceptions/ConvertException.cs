@@ -1,15 +1,14 @@
-﻿namespace MCeToJava.Exceptions
-{
-	internal sealed class ConvertException : Exception
-	{
-		public ConvertException()
-			: base()
-		{
-		}
+﻿namespace MCeToJava.Exceptions;
 
-		public ConvertException(string? message)
-			: base(message)
-		{
-		}
+internal sealed class ConvertException : Exception
+{
+	public ConvertException()
+		: base()
+	{
+	}
+
+	public ConvertException(string? message)
+		: base(message)
+	{
 	}
 }

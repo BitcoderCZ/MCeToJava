@@ -1,8 +1,7 @@
-﻿namespace MCeToJava.Models
+﻿namespace MCeToJava.Models;
+
+internal enum ExportTarget
 {
-	internal enum ExportTarget
-	{
-		Java,
-		Vienna,
-	}
+	Java,
+	Vienna,
 }
