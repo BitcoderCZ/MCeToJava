@@ -14,6 +14,8 @@ namespace MCeToJava.Utils;
 
 internal static class RegionUtils
 {
+	public const int RegionSize = 32;
+
 	public const int TimestampOffset = 0x1000;
 	public const int HeaderLength = 0x1000 + 0x1000;
 	public const int ChunkSize = 0x1000;
@@ -187,7 +189,7 @@ internal static class RegionUtils
 	[Conditional("DEBUG")]
 	private static void ValidateLocalCoords(int localX, int localZ)
 	{
-		Debug.Assert(localX >= 0 && localX < 32);
-		Debug.Assert(localZ >= 0 && localZ < 32);
+		Debug.Assert(localX >= 0 && localX < RegionSize);
+		Debug.Assert(localZ >= 0 && localZ < RegionSize);
 	}
 }

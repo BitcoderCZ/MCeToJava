@@ -15,6 +15,8 @@ namespace MCeToJava;
 
 internal class Program
 {
+	private static bool registryInitialized = false;
+
 	[CommandName("convert")]
 	[HelpText("Converts a Project Earth (Minecraft Earth) buildplate to a Java world.")]
 	private sealed class ConvertCommand : ConsoleCommand
@@ -51,6 +53,8 @@ internal class Program
 				Console.WriteLine("Invalid in-path");
 				return ErrorCode.CliParseError;
 			}
+
+			Log.Information($"Converting '{Path.GetFullPath(InPath)}'");
 
 			string buildplateText;
 			try
@@ -105,6 +109,8 @@ internal class Program
 				return ErrorCode.UnknownError;
 			}
 
+			Log.Information("Writing output zip");
+
 			try
 			{
 				using (FileStream fs = new FileStream(OutPath, FileMode.Create, FileAccess.Write, FileShare.Read))
@@ -118,13 +124,14 @@ internal class Program
 				return ErrorCode.UnknownError;
 			}
 
+			Log.Information("Done");
+
 			return ErrorCode.Success;
 		}
 	}
 
 	static int Main(string[] args)
 	{
-		// TODO: optimize Chunk by not adding data when there is only 1 palette entry
 #if DEBUG
 		Debugger.Launch();
 #endif
@@ -144,42 +151,24 @@ internal class Program
 #endif
 
 		return CommandParser.ParseAndRun(args, new ParseOptions(), typeof(ConvertCommand), []);
-
-		/*WorldData world;
-		using (FileStream fs = new FileStream("java_input", FileMode.Open, FileAccess.Read, FileShare.Read))
-			world = new WorldData(fs);
-
-		var a = world.GetChunkNBT(-1, 0);
-
-		var s = (ListTag)a["sections"];
-
-		var bs = s.SelectMany(tag =>
-		{
-			if (tag is CompoundTag ct && ct.ContainsKey("block_states"))
-			{
-				return (ListTag)((CompoundTag)ct["block_states"])["palette"];
-			}
-
-			return [];
-		});
-
-		var s1 = s[0];
-		var s2 = s[^2];*/
-
-		/*using (FileStream fs = new FileStream("out.zip", FileMode.Open, FileAccess.Read, FileShare.Read))
-			data = new WorldData(fs);
-		
-		var a2 = data.GetChunkNBT(0, 0);*/
 	}
 
 	private static void InitRegistry()
 	{
+		if (registryInitialized)
+		{
+			return;
+		}
+
+		Log.Information("Initializing registry");
 		BedrockBlocks.Load(JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_bedrock.json"))!);
 
 		JavaBlocks.Load(
 			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java.json"))!,
 			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java_nonvanilla.json"))!
 		);
+
+		registryInitialized = true;
 
 		string ReadFile(string fileName)
 		{

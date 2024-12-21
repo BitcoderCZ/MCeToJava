@@ -117,7 +117,11 @@ internal sealed class Chunk
 				paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AIR)));
 			}
 
-			blockStatesTag["data"] = WriteBitArray(blocks, bedrockPalette.Count, "data");
+			Debug.Assert(bedrockPalette.Count > 0);
+			if (bedrockPalette.Count > 1)
+			{
+				blockStatesTag["data"] = WriteBitArray(blocks, bedrockPalette.Count, "data");
+			}
 		}
 
 		return tag;
