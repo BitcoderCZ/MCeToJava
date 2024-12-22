@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,10 @@ internal static class RegionUtils
 	public const int HeaderLength = 0x1000 + 0x1000;
 	public const int ChunkSize = 0x1000;
 
+	public const byte CompressionTypeGzip = 1;
+	public const byte CompressionTypeZlib = 2;
+	public const byte CompressionTypeNone = 3;
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int2 ChunkToRegion(int chunkX, int chunkZ)
 		=> new int2(chunkX >> 5, chunkZ >> 5);
@@ -31,6 +36,13 @@ internal static class RegionUtils
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int LocalToIndex(int localX, int localZ)
 		=> (localZ << 5) | localX;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static int GetPaddedLength(int chunkDataLength)
+	{
+		chunkDataLength += 5; // header
+		return chunkDataLength % ChunkSize == 0 ? chunkDataLength : chunkDataLength + (ChunkSize - (chunkDataLength % ChunkSize));
+	}
 
 	public static bool ContainsChunk(Span<byte> regionData, int localX, int localZ)
 	{
@@ -72,7 +84,7 @@ internal static class RegionUtils
 
 		switch (compressionType)
 		{
-			case 1:
+			case CompressionTypeGzip:
 				{
 					uncompressed = new MemoryStream(chunkData.Length * 2);
 
@@ -81,7 +93,7 @@ internal static class RegionUtils
 					gZipStream.CopyTo(uncompressed);
 				}
 				break;
-			case 2:
+			case CompressionTypeZlib:
 				{
 					uncompressed = new MemoryStream(chunkData.Length * 2);
 
@@ -90,7 +102,7 @@ internal static class RegionUtils
 					deflateStream.CopyTo(uncompressed);
 				}
 				break;
-			case 3:
+			case CompressionTypeNone:
 				{
 					byte[] buffer = new byte[chunkData.Length];
 					chunkData.CopyTo(buffer.AsMemory());
@@ -130,9 +142,8 @@ internal static class RegionUtils
 		int chunkIndex = LocalToIndex(localX, localZ);
 
 		int dataLength = checked((int)chunkData.Length);
-		int totalLength = dataLength + 5;
-		Debug.Assert(index + totalLength <= regionData.Length);
-		int paddedLength = totalLength % ChunkSize == 0 ? totalLength : totalLength + (ChunkSize - (totalLength % ChunkSize));
+		Debug.Assert(index + dataLength + 5 <= regionData.Length);
+		int paddedLength = GetPaddedLength(dataLength);
 
 		BinaryPrimitives.WriteInt32BigEndian(regionData.Slice(chunkIndex * 4), ((index / ChunkSize) << 8) | paddedLength / ChunkSize);
 		BinaryPrimitives.WriteInt32BigEndian(regionData.Slice(chunkIndex * 4 + TimestampOffset), (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -165,8 +176,7 @@ internal static class RegionUtils
 		zlib.Flush();
 
 		int dataLength = checked((int)ms.Length);
-		int totalLength = dataLength + 5;
-		int paddedLength = totalLength % ChunkSize == 0 ? totalLength : totalLength + (ChunkSize - (totalLength % ChunkSize));
+		int paddedLength = GetPaddedLength(dataLength);
 
 		int index;
 		if (regionData.Length == 0)
@@ -183,7 +193,7 @@ internal static class RegionUtils
 			regionData = newRegionData;
 		}
 
-		WriteRawChunkData(regionData, ms, index, 2, localX, localZ);
+		WriteRawChunkData(regionData, ms, index, CompressionTypeZlib, localX, localZ);
 	}
 
 	[Conditional("DEBUG")]

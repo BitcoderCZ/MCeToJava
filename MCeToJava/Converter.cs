@@ -509,7 +509,7 @@ internal static partial class Converter
 		return tag;
 	}
 
-	private static async Task FillWithAirChunks(WorldData worldData, ProgressTask task, int groundPos, string biome)
+	private static async Task FillWithAirChunks(WorldData worldData, ProgressTask? task, int groundPos, string biome)
 	{
 		int numbRegionFiles = 0;
 		foreach (string path in worldData.Files.Keys)
@@ -520,7 +520,10 @@ internal static partial class Converter
 			}
 		}
 
-		task.MaxValue += numbRegionFiles;
+		if (task is not null)
+		{
+			task.MaxValue += numbRegionFiles;
+		}
 
 		Chunk emptyChunk = new Chunk(0, 0);
 
@@ -534,17 +537,52 @@ internal static partial class Converter
 
 		CompoundTag chunkTag = emptyChunk.ToTag(biome);
 
-		await Parallel.ForEachAsync(worldData.Files.Keys, (path, _) =>
+		await Parallel.ForEachAsync(worldData.Files.Keys, ParallelUtils.DefaultOptions, (path, _) =>
 		{
 			if (!RegionFileRegex().IsMatch(path))
 			{
 				return ValueTask.CompletedTask;
 			}
 
+			using MemoryStream chunkData = new MemoryStream(2048);
+			using TagWriter writer = new TagWriter(chunkData, FormatOptions.Java);
+
+			// for some reason if the name is empty, the type doesn't get written... wtf, also in this case an empty name is expected
+			// compound type
+			chunkData.WriteByte(10);
+
+			// name length
+			Debug.Assert(string.IsNullOrEmpty(chunkTag.Name));
+			chunkData.WriteByte(0);
+			chunkData.WriteByte(0);
+
+			using MemoryStream compressedStream = new MemoryStream(RegionUtils.ChunkSize);
+
 			ref byte[] data = ref CollectionsMarshal.GetValueRefOrNullRef(worldData.Files, path);
 			Debug.Assert(!Unsafe.IsNullRef(ref data));
 
 			int2 regionPos = RegionPathToPos(path) * RegionUtils.RegionSize;
+
+			int numbChunksToAdd = 0;
+
+			for (int z = 0; z < RegionUtils.RegionSize; z++)
+			{
+				for (int x = 0; x < RegionUtils.RegionSize; x++)
+				{
+					if (!RegionUtils.ContainsChunk(data, x, z))
+					{
+						numbChunksToAdd++;
+					}
+				}
+			}
+
+			int index = data.Length;
+			Array.Resize(ref data, data.Length + numbChunksToAdd * RegionUtils.ChunkSize);
+
+			if (numbChunksToAdd == 0)
+			{
+				return ValueTask.CompletedTask;
+			}
 
 			for (int z = 0; z < RegionUtils.RegionSize; z++)
 			{
@@ -558,11 +596,29 @@ internal static partial class Converter
 					chunkTag["xPos"] = new IntTag("xPos", regionPos.X + x);
 					chunkTag["zPos"] = new IntTag("zPos", regionPos.Y + z);
 
-					RegionUtils.WriteChunkNBT(ref data, chunkTag, x, z);
+					chunkData.SetLength(3);
+
+					writer.WriteTag(chunkTag);
+
+					compressedStream.SetLength(0);
+					using ZLibStream zlibStream = new ZLibStream(compressedStream, CompressionLevel.Optimal, true); // TODO: measure how much faster this is than CompressionLevel.SmallestSize
+					chunkData.WriteTo(zlibStream);
+					zlibStream.Flush();
+
+					int paddedLength = RegionUtils.GetPaddedLength((int)compressedStream.Length);
+
+					if (index + paddedLength > data.Length)
+					{
+						Array.Resize(ref data, data.Length + Math.Max(paddedLength, RegionUtils.RegionSize * 8));
+					}
+
+					RegionUtils.WriteRawChunkData(data, compressedStream, index, RegionUtils.CompressionTypeZlib, x, z);
+
+					index += paddedLength;
 				}
 			}
 
-			task.Increment(1);
+			task?.Increment(1);
 
 			return ValueTask.CompletedTask;
 		}).ConfigureAwait(false);

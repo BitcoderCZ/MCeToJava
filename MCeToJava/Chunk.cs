@@ -19,7 +19,7 @@ internal sealed class Chunk
 
 	// bedrock ids
 	public readonly int[] Blocks = new int[16 * 256 * 16];
-	public readonly NbtMap?[] blockEntities = new NbtMap[16 * 256 * 16];
+	public readonly NbtMap?[] BlockEntities = new NbtMap[16 * 256 * 16];
 
 	public Chunk(int x, int z)
 	{
