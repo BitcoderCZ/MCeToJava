@@ -20,6 +20,7 @@ using System.Text.RegularExpressions;
 using Spectre.Console;
 using static MCeToJava.Converter;
 using FluentResults;
+using System.Buffers.Binary;
 
 namespace MCeToJava;
 
@@ -544,17 +545,21 @@ internal static partial class Converter
 				return ValueTask.CompletedTask;
 			}
 
-			using MemoryStream chunkData = new MemoryStream(2048);
-			using TagWriter writer = new TagWriter(chunkData, FormatOptions.Java);
+			using MemoryStream chunkDataStream = new MemoryStream(2048);
+			using TagWriter writer = new TagWriter(chunkDataStream, FormatOptions.Java);
 
 			// for some reason if the name is empty, the type doesn't get written... wtf, also in this case an empty name is expected
 			// compound type
-			chunkData.WriteByte(10);
+			chunkDataStream.WriteByte(10);
 
 			// name length
 			Debug.Assert(string.IsNullOrEmpty(chunkTag.Name));
-			chunkData.WriteByte(0);
-			chunkData.WriteByte(0);
+			chunkDataStream.WriteByte(0);
+			chunkDataStream.WriteByte(0);
+
+			writer.WriteTag(chunkTag);
+
+			Span<byte> chunkData = chunkDataStream.ToArray();
 
 			using MemoryStream compressedStream = new MemoryStream(RegionUtils.ChunkSize);
 
@@ -593,16 +598,13 @@ internal static partial class Converter
 						continue;
 					}
 
-					chunkTag["xPos"] = new IntTag("xPos", regionPos.X + x);
-					chunkTag["zPos"] = new IntTag("zPos", regionPos.Y + z);
-
-					chunkData.SetLength(3);
-
-					writer.WriteTag(chunkTag);
+					// to not have to write the tag every time, when only the chunk position changes, it's written only once and the position is changed in the serialized buffer, ugly but faster
+					BinaryPrimitives.WriteInt32BigEndian(chunkData[10..], regionPos.X + x);
+					BinaryPrimitives.WriteInt32BigEndian(chunkData[21..], regionPos.Y + z);
 
 					compressedStream.SetLength(0);
 					using ZLibStream zlibStream = new ZLibStream(compressedStream, CompressionLevel.Optimal, true); // TODO: measure how much faster this is than CompressionLevel.SmallestSize
-					chunkData.WriteTo(zlibStream);
+					zlibStream.Write(chunkData);
 					zlibStream.Flush();
 
 					int paddedLength = RegionUtils.GetPaddedLength((int)compressedStream.Length);
