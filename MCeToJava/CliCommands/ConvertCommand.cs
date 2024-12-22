@@ -1,6 +1,8 @@
 ﻿using CommandLineParser;
 using CommandLineParser.Attributes;
 using CommandLineParser.Commands;
+using FluentResults;
+using MCeToJava.Exceptions;
 using MCeToJava.Models;
 using Serilog;
 
@@ -39,7 +41,20 @@ internal sealed class ConvertCommand : ConsoleCommand
 	{
 		try
 		{
-			return Converter.ConvertFile(InPath, OutPath, null, new Converter.Options(Log.Logger, ExportTarget, Biome, Night, WorldName)).ConfigureAwait(false).GetAwaiter().GetResult();
+			Result result = Converter.ConvertFile(InPath, OutPath, null, new Converter.Options(Log.Logger, ExportTarget, Biome, Night, WorldName)).ConfigureAwait(false).GetAwaiter().GetResult();
+
+			if (result.IsSuccess)
+			{
+				return ErrorCode.Success;
+			}
+			else if (result.HasError<ErrorCodeError>(out var errors))
+			{
+				return errors.First().ErrorCode;
+			}
+			else
+			{
+				return ErrorCode.UnknownError;
+			}
 		}
 		catch (Exception ex)
 		{

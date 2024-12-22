@@ -19,6 +19,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Spectre.Console;
 using static MCeToJava.Converter;
+using FluentResults;
 
 namespace MCeToJava;
 
@@ -61,7 +62,7 @@ internal static partial class Converter
 	[GeneratedRegex(@"^region/r\.-?\d+\.-?\d+\.mca$")]
 	private static partial Regex RegionFileRegex();
 
-	public static async Task<int> ConvertFile(string? inPath, string outPath, ProgressTask? task, Options options)
+	public static async Task<Result> ConvertFile(string? inPath, string outPath, ProgressTask? task, Options options)
 	{
 		if (task is not null)
 		{
@@ -72,7 +73,7 @@ internal static partial class Converter
 		if (string.IsNullOrEmpty(inPath))
 		{
 			options.Logger.Error($"Invalid in-path '{inPath}'");
-			return ErrorCode.CliParseError;
+			return Result.Fail(new ErrorCodeError($"Invalid in-path '{inPath}'", ErrorCode.CliParseError));
 		}
 
 		task?.StartTask();
@@ -89,12 +90,12 @@ internal static partial class Converter
 		catch (FileNotFoundException fileNotFound)
 		{
 			options.Logger.Error($"[{name}] File '{fileNotFound.FileName}' wasn't found.");
-			return ErrorCode.FileNotFound;
+			return Result.Fail(new ErrorCodeError($"File '{fileNotFound.FileName}' wasn't found", ErrorCode.FileNotFound).CausedBy(fileNotFound));
 		}
 		catch (Exception ex)
 		{
 			options.Logger.Error($"[{name}] Failed to read input file: {ex}");
-			return ErrorCode.UnknownError;
+			return Result.Fail(new ErrorCodeError($"Failed to read input file", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		task?.Increment(1);
@@ -112,7 +113,7 @@ internal static partial class Converter
 		catch (Exception ex)
 		{
 			options.Logger.Error($"[{name}] Failed to parse input file: {ex}");
-			return ErrorCode.UnknownError;
+			return Result.Fail(new ErrorCodeError($"Failed to parse input file", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		task?.Increment(1);
@@ -124,7 +125,7 @@ internal static partial class Converter
 		catch (Exception ex)
 		{
 			options.Logger.Error($"[{name}] Failed to initialize block registry: {ex}");
-			return ErrorCode.UnknownError;
+			return Result.Fail(new ErrorCodeError($"Failed to initialize block registry", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		WorldData data;
@@ -135,7 +136,7 @@ internal static partial class Converter
 		catch (Exception ex)
 		{
 			options.Logger.Error($"[{name}] Failed to convert buildplate: {ex}");
-			return ErrorCode.UnknownError;
+			return Result.Fail(new ErrorCodeError($"Failed to convert buildplate", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		options.Logger.Information($"[{name}] Writing output zip");
@@ -150,14 +151,14 @@ internal static partial class Converter
 		catch (Exception ex)
 		{
 			options.Logger.Error($"[{name}] Failed to write output file: {ex}");
-			return ErrorCode.UnknownError;
+			return Result.Fail(new ErrorCodeError($"Failed to write output file", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		task?.Increment(1);
 
 		options.Logger.Information($"[{name}] Done");
 
-		return ErrorCode.Success;
+		return Result.Ok();
 	}
 
 	public static async Task<WorldData> Convert(string name, Buildplate buildplate, ProgressTask? task, Options options)

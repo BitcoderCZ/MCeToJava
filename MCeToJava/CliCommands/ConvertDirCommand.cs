@@ -1,14 +1,18 @@
 ﻿using CommandLineParser.Attributes;
 using CommandLineParser.Commands;
+using FluentResults;
+using MCeToJava.Exceptions;
 using MCeToJava.Models;
 using Serilog;
 using Spectre.Console;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace MCeToJava.CliCommands;
 
@@ -75,14 +79,22 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 				}
 			}
 
-			Converter.InitRegistry(Log.Logger);
+			try
+			{
+				Converter.InitRegistry(Log.Logger);
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Failed to initialize block registry: {ex}");
+				return ErrorCode.UnknownError;
+			}
 
 			var options = new Converter.Options(Program.FileOnlyLogger, ExportTarget, Biome, Night, WorldName);
 
-			int resErrCode = ErrorCode.Success;
+			ConcurrentBag<(string Path, Result result)> failedFiles = [];
 
 			SemaphoreSlim semaphore = new SemaphoreSlim(Math.Max(Environment.ProcessorCount - 1, 1));
-			
+
 			AnsiConsole.Progress()
 				.Columns(
 					new TaskDescriptionColumn(),
@@ -94,19 +106,19 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 				{
 					var filesTask = ctx.AddTask("Convert buildplates", maxValue: files.Length);
 
-					await Task.WhenAll(files.Select(async (file, index) =>
+					await Task.WhenAll(files.Select(async (path, index) =>
 					{
 						await semaphore.WaitAsync().ConfigureAwait(false);
 
-						string fileName = Path.GetFileName(file);
+						string fileName = Path.GetFileName(path);
 						var task = ctx.AddTaskBefore(fileName, filesTask, autoStart: false, maxValue: Converter.NumbProgressStages);
 
-						int errCode = await Converter.ConvertFile(file, Path.Combine(OutDir, fileName + ".zip"), task, options).ConfigureAwait(false);
+						Result result = await Converter.ConvertFile(path, Path.Combine(OutDir, fileName + ".zip"), task, options).ConfigureAwait(false);
 
-						if (errCode != ErrorCode.Success)
+						if (result.IsFailed)
 						{
 							task.Value = task.MaxValue;
-							Interlocked.CompareExchange(ref resErrCode, ErrorCode.Success, errCode);
+							failedFiles.Add((path, result));
 						}
 
 						task.StopTask();
@@ -116,7 +128,13 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 					})).ConfigureAwait(false);
 				}).Wait();
 
-			return resErrCode;
+			if (failedFiles.Count > 0)
+			{
+				PrintFailedFiles(failedFiles);
+				return ErrorCode.UnknownError;
+			}
+
+			return ErrorCode.Success;
 		}
 		catch (Exception ex)
 		{
@@ -126,6 +144,26 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 		finally
 		{
 			Log.CloseAndFlush();
+		}
+	}
+
+	private static void PrintFailedFiles(ConcurrentBag<(string Path, Result Result)> failedFiles)
+	{
+		Console.WriteLine($"Failed to convert {failedFiles.Count} buildplate{(failedFiles.Count == 1 ? string.Empty : "s")}:");
+		Console.WriteLine();
+
+		foreach (var (path, result) in failedFiles)
+		{
+			Console.WriteLine($"{Path.GetFileName(path)} - {string.Join("; ", result.Errors.Select(static err =>
+			{
+				if (err.Reasons.Count == 0)
+				{
+					return err.Message;
+				} else
+				{
+					return err.Message + ": " + string.Join(", ", err.Reasons.Select(err => err.Message));
+				}
+			}))}");
 		}
 	}
 }
