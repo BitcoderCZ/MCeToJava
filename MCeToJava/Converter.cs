@@ -227,7 +227,7 @@ internal static partial class Converter
 		task?.Increment(1);
 
 		options.Logger.Information($"[{name}] Filling region files with empty chunks");
-		await FillWithAirChunks(worldData, buildplate.Offset.Y, options.Biome).ConfigureAwait(false);
+		await FillWithAirChunks(worldData, task, buildplate.Offset.Y, options.Biome).ConfigureAwait(false);
 
 		task?.Increment(1);
 
@@ -508,8 +508,19 @@ internal static partial class Converter
 		return tag;
 	}
 
-	private static async Task FillWithAirChunks(WorldData worldData, int groundPos, string biome)
+	private static async Task FillWithAirChunks(WorldData worldData, ProgressTask task, int groundPos, string biome)
 	{
+		int numbRegionFiles = 0;
+		foreach (string path in worldData.Files.Keys)
+		{
+			if (RegionFileRegex().IsMatch(path))
+			{
+				numbRegionFiles++;
+			}
+		}
+
+		task.MaxValue += numbRegionFiles;
+
 		Chunk emptyChunk = new Chunk(0, 0);
 
 		// 16x256x16
@@ -549,6 +560,8 @@ internal static partial class Converter
 					RegionUtils.WriteChunkNBT(ref data, chunkTag, x, z);
 				}
 			}
+
+			task.Increment(1);
 
 			return ValueTask.CompletedTask;
 		}).ConfigureAwait(false);
