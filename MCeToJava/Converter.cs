@@ -9,20 +9,158 @@ using Serilog;
 using SharpNBT;
 using System.Buffers;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using Spectre.Console;
+using static MCeToJava.Converter;
 
 namespace MCeToJava;
 
 internal static partial class Converter
 {
+	// Read file
+	// Parse buildplate json
+	// Parse model json
+	// Calculate Y, add solid air
+	// Convert (add chunk nbt)
+	// Fill air
+	// Additional files (level.dat, buildplate_metadata.json)
+	// Write zip
+	public static readonly int NumbProgressStages = 8;
+
+	private static bool registryInitialized = false;
+
+	public sealed class Options
+	{
+		public Options(ILogger logger, ExportTarget exportTarget, string biome, bool night, string worldName)
+		{
+			Logger = logger;
+			ExportTarget = exportTarget;
+			Biome = biome;
+			Night = night;
+			WorldName = worldName;
+		}
+
+		public ILogger Logger { get; }
+
+		public ExportTarget ExportTarget { get; }
+
+		public string Biome { get; }
+
+		public bool Night { get; }
+
+		public string WorldName { get; }
+	}
+
 	[GeneratedRegex(@"^region/r\.-?\d+\.-?\d+\.mca$")]
 	private static partial Regex RegionFileRegex();
 
-	public static WorldData Convert(Buildplate buildplate, ExportTarget exportTarget, string biome, bool night, string worldName)
+	public static async Task<int> ConvertFile(string? inPath, string outPath, ProgressTask? task, Options options)
+	{
+		if (task is not null)
+		{
+			task.MaxValue = NumbProgressStages;
+			task.Value = 0;
+		}
+
+		if (string.IsNullOrEmpty(inPath))
+		{
+			options.Logger.Error($"Invalid in-path '{inPath}'");
+			return ErrorCode.CliParseError;
+		}
+
+		task?.StartTask();
+
+		string name = Path.GetFileName(inPath);
+
+		options.Logger.Information($"[{name}] Converting '{Path.GetFullPath(inPath)}'");
+
+		string buildplateText;
+		try
+		{
+			buildplateText = await File.ReadAllTextAsync(inPath).ConfigureAwait(false);
+		}
+		catch (FileNotFoundException fileNotFound)
+		{
+			options.Logger.Error($"[{name}] File '{fileNotFound.FileName}' wasn't found.");
+			return ErrorCode.FileNotFound;
+		}
+		catch (Exception ex)
+		{
+			options.Logger.Error($"[{name}] Failed to read input file: {ex}");
+			return ErrorCode.UnknownError;
+		}
+
+		task?.Increment(1);
+
+		Buildplate? buildplate;
+		try
+		{
+			buildplate = U.DeserializeJson<Buildplate>(buildplateText);
+
+			if (buildplate is null)
+			{
+				throw new ConvertException("Invalid json - null.");
+			}
+		}
+		catch (Exception ex)
+		{
+			options.Logger.Error($"[{name}] Failed to parse input file: {ex}");
+			return ErrorCode.UnknownError;
+		}
+
+		task?.Increment(1);
+
+		try
+		{
+			InitRegistry(options.Logger);
+		}
+		catch (Exception ex)
+		{
+			options.Logger.Error($"[{name}] Failed to initialize block registry: {ex}");
+			return ErrorCode.UnknownError;
+		}
+
+		WorldData data;
+		try
+		{
+			data = await Convert(name, buildplate, task, options).ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			options.Logger.Error($"[{name}] Failed to convert buildplate: {ex}");
+			return ErrorCode.UnknownError;
+		}
+
+		options.Logger.Information($"[{name}] Writing output zip");
+
+		try
+		{
+			using (FileStream fs = new FileStream(outPath, FileMode.Create, FileAccess.Write, FileShare.Read))
+			{
+				data.WriteToStream(fs);
+			}
+		}
+		catch (Exception ex)
+		{
+			options.Logger.Error($"[{name}] Failed to write output file: {ex}");
+			return ErrorCode.UnknownError;
+		}
+
+		task?.Increment(1);
+
+		options.Logger.Information($"[{name}] Done");
+
+		return ErrorCode.Success;
+	}
+
+	public static async Task<WorldData> Convert(string name, Buildplate buildplate, ProgressTask? task, Options options)
 	{
 		BuildplateModel? model = U.DeserializeJson<BuildplateModel>(System.Convert.FromBase64String(buildplate.Model));
 
@@ -36,19 +174,23 @@ internal static partial class Converter
 			throw new ConvertException($"Unsupported version '{model.FormatVersion}', only version 1 is supported.");
 		}
 
+		task?.Increment(1);
+
 		WorldData worldData = new WorldData();
 
 		int lowestY = CalculateLowestY(model);
 		if (lowestY == int.MaxValue)
 		{
-			Log.Error("Failed to calculate lowest y position.");
+			options.Logger.Error($"[{name}] Failed to calculate lowest y position.");
 		}
 		else
 		{
 			AddSolidAir(buildplate, model, lowestY);
 		}
 
-		Log.Information("Writing chunks");
+		task?.Increment(1);
+
+		options.Logger.Information($"[{name}] Writing chunks");
 		Dictionary<int2, Chunk> chunks = [];
 
 		foreach (var subChunk in model.SubChunks)
@@ -76,25 +218,29 @@ internal static partial class Converter
 			}
 		}
 
-		Log.Information("Converting chunks");
+		options.Logger.Information($"[{name}] Converting chunks");
 		foreach (var (pos, chunk) in chunks)
 		{
-			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag());
+			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(options.Biome));
 		}
 
-		Log.Information("Filling region files with empty chunks");
-		FillWithAirChunks(worldData, buildplate.Offset.Y);
+		task?.Increment(1);
 
-		switch (exportTarget)
+		options.Logger.Information($"[{name}] Filling region files with empty chunks");
+		await FillWithAirChunks(worldData, buildplate.Offset.Y, options.Biome).ConfigureAwait(false);
+
+		task?.Increment(1);
+
+		switch (options.ExportTarget)
 		{
 			case ExportTarget.Java:
-				Log.Information("Creating level.dat");
+				options.Logger.Information($"[{name}] Creating level.dat");
 
 				using (MemoryStream ms = new MemoryStream())
 				using (GZipStream gzs = new GZipStream(ms, CompressionLevel.Optimal))
 				using (TagWriter writer = new TagWriter(gzs, FormatOptions.Java))
 				{
-					var tag = CreateLevelDat(false, night, biome, worldName);
+					var tag = CreateLevelDat(false, options.Night, options.Biome, options.WorldName);
 
 					// for some reason if the name is empty, the type doesn't get written... wtf, also in this case an empty name is expected
 					// compound type
@@ -113,13 +259,13 @@ internal static partial class Converter
 				}
 				break;
 			case ExportTarget.Vienna:
-				Log.Information("Creating buildplate_metadata.json");
+				options.Logger.Information($"[{name}] Creating buildplate_metadata.json");
 
 				worldData.Files.Add("buildplate_metadata.json", Encoding.UTF8.GetBytes(U.SerializeJson(new BuildplateMetadata(
 					1,
 					Math.Max(buildplate.Dimension.X, buildplate.Dimension.Z),
 					buildplate.Offset.Y,
-					night
+					options.Night
 				))));
 
 				int fileCount = worldData.Files.Count;
@@ -146,7 +292,34 @@ internal static partial class Converter
 				break;
 		}
 
+		task?.Increment(1);
+
 		return worldData;
+	}
+
+	public static void InitRegistry(ILogger logger)
+	{
+		if (registryInitialized)
+		{
+			return;
+		}
+
+		logger.Information("[registry] Initializing");
+		BedrockBlocks.Load(JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_bedrock.json"))!);
+
+		JavaBlocks.Load(
+			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java.json"))!,
+			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java_nonvanilla.json"))!
+		);
+
+		logger.Information("[registry] Initialization finished");
+
+		registryInitialized = true;
+
+		string ReadFile(string fileName)
+		{
+			return File.ReadAllText(Path.Combine("Data", fileName));
+		}
 	}
 
 	private static int CalculateLowestY(BuildplateModel model)
@@ -335,7 +508,7 @@ internal static partial class Converter
 		return tag;
 	}
 
-	private static void FillWithAirChunks(WorldData worldData, int groundPos)
+	private static async Task FillWithAirChunks(WorldData worldData, int groundPos, string biome)
 	{
 		Chunk emptyChunk = new Chunk(0, 0);
 
@@ -347,13 +520,13 @@ internal static partial class Converter
 			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AIR, index + groundPos * 16, (256 - groundPos) * 16);
 		}
 
-		CompoundTag chunkTag = emptyChunk.ToTag();
+		CompoundTag chunkTag = emptyChunk.ToTag(biome);
 
-		foreach (string path in worldData.Files.Keys)
+		await Parallel.ForEachAsync(worldData.Files.Keys, (path, _) =>
 		{
 			if (!RegionFileRegex().IsMatch(path))
 			{
-				continue;
+				return ValueTask.CompletedTask;
 			}
 
 			ref byte[] data = ref CollectionsMarshal.GetValueRefOrNullRef(worldData.Files, path);
@@ -376,9 +549,12 @@ internal static partial class Converter
 					RegionUtils.WriteChunkNBT(ref data, chunkTag, x, z);
 				}
 			}
-		}
+
+			return ValueTask.CompletedTask;
+		}).ConfigureAwait(false);
 	}
 
+	#region Helpers
 	private static int2 RegionPathToPos(ReadOnlySpan<char> path)
 	{
 		Debug.Assert(RegionFileRegex().IsMatch(path));
@@ -401,4 +577,5 @@ internal static partial class Converter
 
 		return new int2(regionX, regionZ);
 	}
+	#endregion
 }

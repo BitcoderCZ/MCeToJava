@@ -29,7 +29,7 @@ internal sealed class Chunk
 		Array.Fill(Blocks, BedrockBlocks.AIR);
 	}
 
-	public CompoundTag ToTag()
+	public CompoundTag ToTag(string biome)
 	{
 		CompoundTag tag = new CompoundTag(null);
 
@@ -60,7 +60,7 @@ internal sealed class Chunk
 
 				ListTag biomePalette = new ListTag("palette", TagType.String)
 				{
-					new StringTag(null, "minecraft:plains")
+					new StringTag(null, biome)
 				};
 
 				biomes["palette"] = biomePalette;

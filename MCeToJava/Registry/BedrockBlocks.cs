@@ -42,14 +42,14 @@ internal static class BedrockBlocks
 			BlockNameAndState blockNameAndState = new BlockNameAndState(name, state);
 			if (!stateToIdMap.TryAdd(blockNameAndState, id))
 			{
-				Log.Warning($"Duplicate Bedrock block name/state {name}");
+				Log.Warning($"[registry] Duplicate Bedrock block name/state {name}");
 			}
 
 			nameToId.TryAdd(name, id);
 
 			if (!idToStateMap.TryAdd(id, blockNameAndState))
 			{
-				Log.Warning($"Duplicate Bedrock block ID {id}");
+				Log.Warning($"[registry] Duplicate Bedrock block ID {id}");
 			}
 		}
 

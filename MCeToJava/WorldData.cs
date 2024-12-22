@@ -13,6 +13,14 @@ internal sealed class WorldData
 {
 	public readonly Dictionary<string, byte[]> Files = [];
 
+	public readonly
+#if NET9_0_OR_GREATER
+		Lock
+#else
+		object
+#endif
+		FilesLock = new();
+
 	public WorldData()
 	{
 	}
@@ -45,12 +53,18 @@ internal sealed class WorldData
 
 		string fileName = $"region/r.{region.X}.{region.Y}.mca";
 
-		if (!Files.ContainsKey(fileName))
+		ref byte[] bytes = ref Unsafe.NullRef<byte[]>();
+
+		lock (FilesLock)
 		{
-			Files.Add(fileName, Array.Empty<byte>());
+			if (!Files.ContainsKey(fileName))
+			{
+				Files.Add(fileName, Array.Empty<byte>());
+			}
+
+			bytes = ref CollectionsMarshal.GetValueRefOrNullRef(Files, fileName);
 		}
 
-		ref byte[] bytes = ref CollectionsMarshal.GetValueRefOrNullRef(Files, fileName);
 		Debug.Assert(!Unsafe.IsNullRef(ref bytes));
 
 		RegionUtils.WriteChunkNBT(ref bytes, tag, local.X, local.Y);
@@ -61,18 +75,24 @@ internal sealed class WorldData
 		int2 region = RegionUtils.ChunkToRegion(x, z);
 		int2 local = RegionUtils.ChunkToLocal(x, z);
 
-		return RegionUtils.ReadChunkNTB(Files[$"region/r.{region.X}.{region.Y}.mca"], local.X, local.Y);
+		lock (FilesLock)
+		{
+			return RegionUtils.ReadChunkNTB(Files[$"region/r.{region.X}.{region.Y}.mca"], local.X, local.Y);
+		}
 	}
 
 	public void WriteToStream(Stream stream)
 	{
 		using ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, true);
 
-		foreach (var (path, data) in Files)
+		lock (FilesLock)
 		{
-			var entry = archive.CreateEntry(path, CompressionLevel.SmallestSize);
-			using var entryStream = entry.Open();
-			entryStream.Write(data);
+			foreach (var (path, data) in Files)
+			{
+				var entry = archive.CreateEntry(path, CompressionLevel.SmallestSize);
+				using var entryStream = entry.Open();
+				entryStream.Write(data);
+			}
 		}
 	}
 }

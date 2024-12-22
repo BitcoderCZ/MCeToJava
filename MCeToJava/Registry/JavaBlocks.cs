@@ -23,7 +23,7 @@ internal static class JavaBlocks
 
 			if (!idToNameAndState.TryAdd(id, nameAndSate))
 			{
-				Log.Warning($"Duplicate Java block ID {id}");
+				Log.Warning($"[registry] Duplicate Java block ID {id}");
 			}
 
 			try
@@ -41,7 +41,7 @@ internal static class JavaBlocks
 			}
 			catch (BedrockMappingFailException ex)
 			{
-				Log.Warning($"Cannot find Bedrock block for Java block {nameAndSate}: {ex}");
+				Log.Warning($"[registry] Cannot find Bedrock block for Java block {nameAndSate}: {ex}");
 			}
 		}
 
@@ -76,7 +76,7 @@ internal static class JavaBlocks
 				}
 				catch (BedrockMappingFailException ex)
 				{
-					Log.Warning($"Cannot find Bedrock block for Java block {name}: {ex}");
+					Log.Warning($"[registry] Cannot find Bedrock block for Java block {name}: {ex}");
 				}
 			}
 		}
