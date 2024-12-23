@@ -1,36 +1,38 @@
 ﻿using MCeToJava.Utils;
+using SharpNBT;
 
 namespace MCeToJava.NBT;
 
 internal sealed class NbtType
 {
-	public static readonly NbtType END = new NbtType(typeof(void), Enum.END);
-	public static readonly NbtType BYTE = new NbtType(typeof(byte), Enum.BYTE);
-	public static readonly NbtType SHORT = new NbtType(typeof(short), Enum.SHORT);
-	public static readonly NbtType INT = new NbtType(typeof(int), Enum.INT);
-	public static readonly NbtType LONG = new NbtType(typeof(long), Enum.LONG);
-	public static readonly NbtType FLOAT = new NbtType(typeof(float), Enum.FLOAT);
-	public static readonly NbtType DOUBLE = new NbtType(typeof(double), Enum.DOUBLE);
-	public static readonly NbtType BYTE_ARRAY = new NbtType(typeof(byte[]), Enum.BYTE_ARRAY);
-	public static readonly NbtType STRING = new NbtType(typeof(string), Enum.STRING);
+	public static readonly NbtType END = new NbtType(typeof(void), TagType.End);
+	public static readonly NbtType BYTE = new NbtType(typeof(byte), TagType.Byte);
+	public static readonly NbtType SHORT = new NbtType(typeof(short), TagType.Short);
+	public static readonly NbtType INT = new NbtType(typeof(int), TagType.Int);
+	public static readonly NbtType LONG = new NbtType(typeof(long), TagType.Long);
+	public static readonly NbtType FLOAT = new NbtType(typeof(float), TagType.Float);
+	public static readonly NbtType DOUBLE = new NbtType(typeof(double), TagType.Double);
+	public static readonly NbtType BYTE_ARRAY = new NbtType(typeof(byte[]), TagType.ByteArray);
+	public static readonly NbtType STRING = new NbtType(typeof(string), TagType.Short);
 
-	public static readonly NbtType LIST = new NbtType(typeof(NbtList), Enum.LIST);
-	public static readonly NbtType COMPOUND = new NbtType(typeof(NbtMap), Enum.COMPOUND);
-	public static readonly NbtType INT_ARRAY = new NbtType(typeof(int[]), Enum.INT_ARRAY);
-	public static readonly NbtType LONG_ARRAY = new NbtType(typeof(long[]), Enum.LONG_ARRAY);
+	public static readonly NbtType LIST = new NbtType(typeof(NbtList), TagType.List);
+	public static readonly NbtType COMPOUND = new NbtType(typeof(NbtMap), TagType.Compound);
+	public static readonly NbtType INT_ARRAY = new NbtType(typeof(int[]), TagType.IntArray);
+	public static readonly NbtType LONG_ARRAY = new NbtType(typeof(long[]), TagType.LongArray);
 
-	private static readonly NbtType[] BY_ID =
-			{ END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY, LONG_ARRAY};
+	private static readonly NbtType[] BY_ID = [END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY, LONG_ARRAY];
 
 	private static readonly Dictionary<Type, NbtType> BY_CLASS = new();
 
 	static NbtType()
 	{
 		foreach (NbtType type in BY_ID)
+		{
 			BY_CLASS.Add(type.TagClass, type);
+		}
 	}
 
-	private NbtType(Type tagClass, Enum enumeration)
+	private NbtType(Type tagClass, TagType enumeration)
 	{
 		TagClass = tagClass;
 		Enumeration = enumeration;
@@ -38,7 +40,7 @@ internal sealed class NbtType
 
 	public Type TagClass { get; private set; }
 
-	public Enum Enumeration { get; private set; }
+	public TagType Enumeration { get; private set; }
 
 	public int Id => (int)Enumeration;
 
@@ -64,27 +66,10 @@ internal sealed class NbtType
 
 		return type;
 	}
-
-	public enum Enum : int
-	{
-		END,
-		BYTE,
-		SHORT,
-		INT,
-		LONG,
-		FLOAT,
-		DOUBLE,
-		BYTE_ARRAY,
-		STRING,
-		LIST,
-		COMPOUND,
-		INT_ARRAY,
-		LONG_ARRAY
-	}
 }
 
 internal static class NbtType_EnumExtensions
 {
-	public static string GetName(this NbtType.Enum e)
+	public static string GetName(this TagType e)
 		=> "TAG_" + Enum.GetName(e);
 }

@@ -7,11 +7,13 @@ namespace MCeToJava.Registry;
 
 internal static class JavaBlocks
 {
-	private static readonly Dictionary<int, string> idToNameAndState = new();
+	private static readonly Dictionary<int, string> javaIdToNameAndState = [];
 
-	private static readonly Dictionary<int, string> bedrockToNameAndState = new();
+	private static readonly Dictionary<int, string> bedrockIdToNameAndState = [];
 
-	private static readonly Dictionary<string, string> nameToDefaultNameAndState = new();
+	private static readonly Dictionary<string, string> nameToDefaultNameAndState = [];
+
+	private static readonly Dictionary<int, BedrockMapping> bedrockIdToBedrockMapping = [];
 
 	public static void Load(JsonArray vanillaRoot, JsonArray nonvanillaRoot)
 	{
@@ -21,7 +23,7 @@ internal static class JavaBlocks
 			int id = obj["id"]!.GetValue<int>();
 			string nameAndSate = obj["name"]!.GetValue<string>();
 
-			if (!idToNameAndState.TryAdd(id, nameAndSate))
+			if (!javaIdToNameAndState.TryAdd(id, nameAndSate))
 			{
 				Log.Warning($"[registry] Duplicate Java block ID {id}");
 			}
@@ -35,7 +37,8 @@ internal static class JavaBlocks
 					continue;
 				}
 
-				bedrockToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
+				bedrockIdToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
+				bedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
 				int bracketIndex = nameAndSate.IndexOf('[');
 				nameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate.Substring(0, bracketIndex), nameAndSate);
 			}
@@ -72,7 +75,8 @@ internal static class JavaBlocks
 						continue;
 					}
 
-					bedrockToNameAndState.TryAdd(bedrockMapping.Id, baseName);
+					bedrockIdToNameAndState.TryAdd(bedrockMapping.Id, baseName);
+					bedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
 				}
 				catch (BedrockMappingFailException ex)
 				{
@@ -229,9 +233,9 @@ internal static class JavaBlocks
 	}
 
 	// not needed
-	public static string? GetName(int id)
+	public static string? GetName(int javaId)
 	{
-		if (idToNameAndState.TryGetValue(id, out string? name))
+		if (javaIdToNameAndState.TryGetValue(javaId, out string? name))
 		{
 			return name;
 		}
@@ -243,7 +247,7 @@ internal static class JavaBlocks
 
 	public static string? GetNameAndState(int bedrockId)
 	{
-		if (bedrockToNameAndState.TryGetValue(bedrockId, out string? nameAndState))
+		if (bedrockIdToNameAndState.TryGetValue(bedrockId, out string? nameAndState))
 		{
 			return nameAndState;
 		}

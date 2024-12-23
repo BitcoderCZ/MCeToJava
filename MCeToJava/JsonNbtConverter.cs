@@ -11,7 +11,7 @@ internal static class JsonNbtConverter
 	public static NbtMap Convert(CompoundJsonNbtTag tag)
 	{
 		Dictionary<string, object> value = new();
-		foreach (var entry in (Dictionary<string, JsonNbtTag>)tag.value)
+		foreach (var entry in tag.Value)
 			value[entry.Key] = Convert(entry.Value);
 
 		return new NbtMap(value);
@@ -20,7 +20,7 @@ internal static class JsonNbtConverter
 	public static NbtList Convert(ListJsonNbtTag tag)
 	{
 		List<object> value = new();
-		foreach (JsonNbtTag item in (JsonNbtTag[])tag.value)
+		foreach (JsonNbtTag item in tag.Value)
 			value.Add(Convert(item));
 
 		Debug.Assert(value.Count > 0);
@@ -35,21 +35,28 @@ internal static class JsonNbtConverter
 		else if (tag is ListJsonNbtTag list)
 			return Convert(list);
 		else if (tag is IntJsonNbtTag i)
-			return i.value;
+			return i.Value;
 		else if (tag is ByteJsonNbtTag b)
-			return b.value;
+			return b.Value;
 		else if (tag is FloatJsonNbtTag f)
-			return f.value;
+			return f.Value;
 		else if (tag is StringJsonNbtTag s)
-			return s.value;
+			return s.Value;
 		else
 			throw new UnsupportedOperationException($"Cannot convert tag of type {tag.GetType().Name}");
 	}
 
+	[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+	[JsonDerivedType(typeof(CompoundJsonNbtTag), "compound")]
+	[JsonDerivedType(typeof(ListJsonNbtTag), "list")]
+	[JsonDerivedType(typeof(IntJsonNbtTag), "int")]
+	[JsonDerivedType(typeof(ByteJsonNbtTag), "byte")]
+	[JsonDerivedType(typeof(FloatJsonNbtTag), "float")]
+	[JsonDerivedType(typeof(StringJsonNbtTag), "string")]
 	public abstract class JsonNbtTag
 	{
 		[JsonConverter(typeof(JsonStringEnumConverter))]
-		public enum Type
+		public enum TagType
 		{
 			[EnumMember(Value = "compound")] COMPOUND,
 			[EnumMember(Value = "list")] LIST,
@@ -59,61 +66,71 @@ internal static class JsonNbtConverter
 			[EnumMember(Value = "string")] STRING
 		}
 
-		public readonly Type type;
-		public readonly object value;
+		public TagType Type { get; }
 
-		public JsonNbtTag(Type type, object value)
+		protected JsonNbtTag(TagType type)
 		{
-			this.type = type;
-			this.value = value;
+			Type = type;
 		}
 	}
 
 	public sealed class CompoundJsonNbtTag : JsonNbtTag
 	{
-		public CompoundJsonNbtTag(Dictionary<string, JsonNbtTag> value)
-			: base(Type.COMPOUND, value)
+		public CompoundJsonNbtTag()
+			: base(TagType.COMPOUND)
 		{
 		}
+
+		public required Dictionary<string, JsonNbtTag> Value { get; init; }
 	}
 
 	public sealed class ListJsonNbtTag : JsonNbtTag
 	{
-		public ListJsonNbtTag(JsonNbtTag[] value)
-			: base(Type.LIST, value)
+		public ListJsonNbtTag()
+			: base(TagType.LIST)
 		{
 		}
+
+		public required List<JsonNbtTag> Value { get; init; }
 	}
 
 	public sealed class IntJsonNbtTag : JsonNbtTag
 	{
-		public IntJsonNbtTag(int value)
-			: base(Type.INT, value)
+		public IntJsonNbtTag()
+			: base(TagType.INT)
 		{
 		}
+
+		public required int Value { get; init; }
 	}
 
 	public sealed class ByteJsonNbtTag : JsonNbtTag
 	{
-		public ByteJsonNbtTag(byte value)
-			: base(Type.BYTE, value)
+		public ByteJsonNbtTag()
+			: base(TagType.BYTE)
 		{
 		}
+
+		public required byte Value { get; init; }
 	}
 
 	public sealed class FloatJsonNbtTag : JsonNbtTag
 	{
-		public FloatJsonNbtTag(float value)
-			: base(Type.FLOAT, value)
+		public FloatJsonNbtTag()
+			: base(TagType.FLOAT)
 		{
 		}
+
+		public required float Value { get; init; }
 	}
 
 	public sealed class StringJsonNbtTag : JsonNbtTag
 	{
-		public StringJsonNbtTag(string value)
-			: base(Type.STRING, value)
+		public StringJsonNbtTag()
+			: base(TagType.STRING)
 		{
 		}
+
+		public required string Value { get; init; }
 	}
 }

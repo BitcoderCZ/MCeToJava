@@ -1,7 +1,7 @@
-﻿using MCeToJava.Models;
-using MCeToJava.NBT;
+﻿using MCeToJava.NBT;
 using MCeToJava.Registry;
 using MCeToJava.Utils;
+using Serilog;
 using SharpNBT;
 using System.Diagnostics;
 
@@ -19,7 +19,8 @@ internal sealed class Chunk
 
 	// bedrock ids
 	public readonly int[] Blocks = new int[16 * 256 * 16];
-	public readonly NbtMap?[] BlockEntities = new NbtMap[16 * 256 * 16];
+	//public readonly NbtMap?[] BlockEntities = new NbtMap[16 * 256 * 16];
+	public readonly List<NbtMap> BlockEntities = [];
 
 	public Chunk(int x, int z)
 	{
@@ -29,7 +30,7 @@ internal sealed class Chunk
 		Array.Fill(Blocks, BedrockBlocks.AIR);
 	}
 
-	public CompoundTag ToTag(string biome)
+	public CompoundTag ToTag(string biome, ILogger logger)
 	{
 		CompoundTag tag = new CompoundTag(null);
 
@@ -124,6 +125,38 @@ internal sealed class Chunk
 			}
 		}
 
+		ListTag blockEntities = new ListTag("block_entities", TagType.Compound);
+
+		foreach (var blockEntity in BlockEntities)
+		{
+			if (!ValidateBlockEntity(blockEntity, logger))
+			{
+				continue;
+			}
+
+			CompoundTag entityTag = new CompoundTag(null);
+
+			string entityType = ((string)blockEntity.map["id"]).ToLowerInvariant(); // validated in Converter
+
+			entityTag["id"] = new StringTag("id", entityType);
+			entityTag["keepPacked"] = new ByteTag("keepPacked", false);
+			entityTag["components"] = new CompoundTag("components");
+
+			foreach (var (key, value) in blockEntity.map)
+			{
+				var itemTag = NbtUtils.CreateTag(key, value);
+
+				if (itemTag is not null && IsValidBlockEntityValue(key, value, entityType))
+				{
+					entityTag[key] = itemTag;
+				}
+			}
+
+			blockEntities.Add(entityTag);
+		}
+
+		tag["block_entities"] = blockEntities;
+
 		return tag;
 	}
 
@@ -207,5 +240,37 @@ internal sealed class Chunk
 		}
 
 		return new LongArrayTag(tagName, longArray);
+	}
+
+	private static bool ValidateBlockEntity(NbtMap blockEntity, ILogger logger)
+	{
+		return Contains("id") && Contains("x") && Contains("y") && Contains("z");
+
+		bool Contains(string name)
+		{
+			bool c = blockEntity.ContainsKey(name);
+			if (!c)
+			{
+				logger.Warning($"Invalid block entity: Doesn't contain '{name}'.");
+			}
+
+			return c;
+		}
+	}
+
+	private static bool IsValidBlockEntityValue(string name, object value, string entityType)
+	{
+		switch (name)
+		{
+			// case "id": // added separately
+			case "keepPacked":
+			case "x":
+			case "y":
+			case "z":
+			case "components":
+				return true;
+			default:
+				return false;
+		}
 	}
 }

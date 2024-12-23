@@ -1,15 +1,9 @@
 ﻿using MathUtils.Vectors;
 using SharpNBT;
-using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava.Utils;
 
@@ -183,7 +177,8 @@ internal static class RegionUtils
 		{
 			regionData = new byte[HeaderLength + paddedLength];
 			index = HeaderLength;
-		} else
+		}
+		else
 		{
 			byte[] newRegionData = new byte[regionData.Length + paddedLength];
 			Buffer.BlockCopy(regionData, 0, newRegionData, 0, regionData.Length);

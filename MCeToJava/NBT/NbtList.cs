@@ -6,7 +6,6 @@ internal sealed class NbtList : IList
 {
 	public static readonly NbtList EMPTY = new NbtList(NbtType.END);
 
-	private readonly NbtType _type;
 	private readonly Array _array;
 
 	public bool IsFixedSize => true;
@@ -19,27 +18,28 @@ internal sealed class NbtList : IList
 
 	public object SyncRoot => null!;
 
-	public object? this[int index] { get => Get(index); set => throw new InvalidOperationException(); }
+	public object? this[int index]
+	{
+		get => Get(index);
+		set => throw new InvalidOperationException();
+	}
 
 	public NbtList(NbtType type, ICollection collection)
 	{
 		ArgumentNullException.ThrowIfNull(type);
-		_type = type;
+		Type = type;
 		_array = Array.CreateInstance(type.TagClass, collection.Count);
 		collection.CopyTo(_array, 0);
 	}
 
 	public NbtList(NbtType tagClass, params object[] array)
 	{
-		ArgumentNullException.ThrowIfNull(_type, "tagClass");
-		_type = tagClass;
+		ArgumentNullException.ThrowIfNull(Type, "tagClass");
+		Type = tagClass;
 		_array = (Array)array.Clone();
 	}
 
-	public NbtType getType()
-	{
-		return _type;
-	}
+	public NbtType Type { get; }
 
 	public object Get(int index)
 	{

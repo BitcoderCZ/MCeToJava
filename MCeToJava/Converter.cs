@@ -1,4 +1,5 @@
-﻿using MathUtils.Vectors;
+﻿using FluentResults;
+using MathUtils.Vectors;
 using MCeToJava.Exceptions;
 using MCeToJava.Models;
 using MCeToJava.Models.MCE;
@@ -7,20 +8,17 @@ using MCeToJava.Registry;
 using MCeToJava.Utils;
 using Serilog;
 using SharpNBT;
+using Spectre.Console;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json.Nodes;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using Spectre.Console;
-using static MCeToJava.Converter;
-using FluentResults;
-using System.Buffers.Binary;
 
 namespace MCeToJava;
 
@@ -220,16 +218,65 @@ internal static partial class Converter
 			}
 		}
 
+		foreach (var blockEntity in model.BlockEntities)
+		{
+			JsonNbtConverter.CompoundJsonNbtTag? jsonMap = blockEntity.Data as JsonNbtConverter.CompoundJsonNbtTag;
+
+			if (jsonMap is null)
+			{
+				options.Logger.Warning($"[{name}] Invalid block entity: Data wasn't compound tag.");
+				continue;
+			}
+
+			var map = jsonMap.Value;
+
+			if (!map.TryGetValue("x", out var xTag) || !map.TryGetValue("y", out var yTag) || !map.TryGetValue("z", out var zTag) || !map.TryGetValue("id", out var idTag))
+			{
+				options.Logger.Warning($"[{name}] Invalid block entity: Missing x, y, z or id tag(s).");
+				continue;
+			}
+
+			if (xTag is not JsonNbtConverter.IntJsonNbtTag xInt || blockEntity.Position.X != xInt.Value)
+			{
+				options.Logger.Warning($"[{name}] Invalid block entity: x tags's value doesn't match x position.");
+				continue;
+			}
+			else if (yTag is not JsonNbtConverter.IntJsonNbtTag yInt || blockEntity.Position.Y != yInt.Value)
+			{
+				options.Logger.Warning($"[{name}] Invalid block entity: y tags's value doesn't match y position.");
+				continue;
+			}
+			else if (zTag is not JsonNbtConverter.IntJsonNbtTag zInt || blockEntity.Position.Z != zInt.Value)
+			{
+				options.Logger.Warning($"[{name}] Invalid block entity: z tags's value doesn't match z position.");
+				continue;
+			}
+			else if (idTag is not JsonNbtConverter.StringJsonNbtTag)
+			{
+				options.Logger.Warning($"[{name}] Invalid block entity: id tags's value must be a string.");
+				continue;
+			}
+
+			int2 chunkPos = ChunkUtils.BlockToChunk(blockEntity.Position.X, blockEntity.Position.Z);
+			if (!chunks.TryGetValue(chunkPos, out var chunk))
+			{
+				chunk = new Chunk(chunkPos.X, chunkPos.Y);
+				chunks.Add(chunkPos, chunk);
+			}
+
+			chunk.BlockEntities.Add(JsonNbtConverter.Convert(jsonMap));
+		}
+
 		options.Logger.Information($"[{name}] Converting chunks");
 		foreach (var (pos, chunk) in chunks)
 		{
-			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(options.Biome));
+			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(options.Biome, options.Logger));
 		}
 
 		task?.Increment(1);
 
 		options.Logger.Information($"[{name}] Filling region files with empty chunks");
-		await FillWithAirChunks(worldData, task, buildplate.Offset.Y, options.Biome).ConfigureAwait(false);
+		await FillWithAirChunks(worldData, task, buildplate.Offset.Y, options.Biome, options.Logger).ConfigureAwait(false);
 
 		task?.Increment(1);
 
@@ -510,7 +557,7 @@ internal static partial class Converter
 		return tag;
 	}
 
-	private static async Task FillWithAirChunks(WorldData worldData, ProgressTask? task, int groundPos, string biome)
+	private static async Task FillWithAirChunks(WorldData worldData, ProgressTask? task, int groundPos, string biome, ILogger logger)
 	{
 		int numbRegionFiles = 0;
 		foreach (string path in worldData.Files.Keys)
@@ -536,7 +583,7 @@ internal static partial class Converter
 			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AIR, index + groundPos * 16, (256 - groundPos) * 16);
 		}
 
-		CompoundTag chunkTag = emptyChunk.ToTag(biome);
+		CompoundTag chunkTag = emptyChunk.ToTag(biome, logger);
 
 		await Parallel.ForEachAsync(worldData.Files.Keys, ParallelUtils.DefaultOptions, (path, _) =>
 		{

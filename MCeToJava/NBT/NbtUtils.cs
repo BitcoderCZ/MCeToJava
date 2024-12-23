@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using SharpNBT;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 
@@ -103,5 +104,63 @@ internal static class NbtUtils
 			r.Append(HEX_CODE[(b & 0xF)]);
 		}
 		return r.ToString();
+	}
+
+	public static Tag? CreateTag(string? name, object value)
+	{
+		switch (value)
+		{
+			case byte b:
+				return new ByteTag(name, b);
+			case short s:
+				return new ShortTag(name, s);
+			case int i:
+				return new IntTag(name, i);
+			case long l:
+				return new LongTag(name, l);
+			case float f:
+				return new FloatTag(name, f);
+			case double d:
+				return new DoubleTag(name, d);
+			case byte[] ba:
+				return new ByteArrayTag(name, ba);
+			case string s:
+				return new StringTag(name, s);
+			case NbtList list:
+				{
+					ListTag listTag = new ListTag(name, list.Type.Enumeration, list.Count);
+					foreach (var item in list)
+					{
+						var tag = CreateTag(null, item);
+						if (tag is not null)
+						{
+							listTag.Add(tag);
+						}
+					}
+
+					return listTag;
+				}
+			case NbtMap map:
+				{
+					CompoundTag compoundTag = new CompoundTag(name);
+
+					foreach (var (key, item) in map.map)
+					{
+						var tag = CreateTag(key, item);
+						if (tag is not null)
+						{
+							compoundTag.Add(key, tag);
+						}
+					}
+
+					return compoundTag;
+				}
+			case int[] ia:
+				return new IntArrayTag(name, ia);
+			case long[] la:
+				return new LongArrayTag(name, la);
+			default:
+				return null;
+		}
 	}
 }

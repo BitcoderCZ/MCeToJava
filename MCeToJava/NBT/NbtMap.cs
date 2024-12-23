@@ -1,4 +1,5 @@
 ﻿using MCeToJava.Utils;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -47,6 +48,9 @@ internal sealed class NbtMap
 		else
 			return false;
 	}
+
+	public bool TryGetValue(string key, [MaybeNullWhen(false)] out object? value)
+		=> map.TryGetValue(key, out value);
 
 	public object? Get(string key)
 	{

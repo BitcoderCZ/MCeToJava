@@ -1,18 +1,10 @@
 ﻿using CommandLineParser.Attributes;
 using CommandLineParser.Commands;
 using FluentResults;
-using MCeToJava.Exceptions;
 using MCeToJava.Models;
 using Serilog;
 using Spectre.Console;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace MCeToJava.CliCommands;
 
@@ -159,7 +151,8 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 				if (err.Reasons.Count == 0)
 				{
 					return err.Message;
-				} else
+				}
+				else
 				{
 					return err.Message + ": " + string.Join(", ", err.Reasons.Select(err => err.Message));
 				}
