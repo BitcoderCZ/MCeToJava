@@ -270,7 +270,7 @@ internal static partial class Converter
 		options.Logger.Information($"[{name}] Converting chunks");
 		foreach (var (pos, chunk) in chunks)
 		{
-			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(options.Biome, options.Logger));
+			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(options.Biome, true, options.Logger));
 		}
 
 		task?.Increment(1);
@@ -583,7 +583,7 @@ internal static partial class Converter
 			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AIR, index + groundPos * 16, (256 - groundPos) * 16);
 		}
 
-		CompoundTag chunkTag = emptyChunk.ToTag(biome, logger);
+		CompoundTag chunkTag = emptyChunk.ToTag(biome, false, logger);
 
 		await Parallel.ForEachAsync(worldData.Files.Keys, ParallelUtils.DefaultOptions, (path, _) =>
 		{

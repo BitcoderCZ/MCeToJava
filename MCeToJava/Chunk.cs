@@ -14,6 +14,8 @@ internal sealed class Chunk
 
 	private const int BlockPerSubChunk = 16 * 16 * 16;
 
+	private static readonly ListTag PostProcessingTag;
+
 	public readonly int ChunkX;
 	public readonly int ChunkZ;
 
@@ -30,14 +32,31 @@ internal sealed class Chunk
 		Array.Fill(Blocks, BedrockBlocks.AIR);
 	}
 
-	public CompoundTag ToTag(string biome, ILogger logger)
+	static Chunk()
+	{
+		PostProcessingTag = new ListTag("PostProcessing", TagType.List, 24);
+
+		ListTag postProcessingList = new ListTag(null, TagType.Short, 16 * 16 * 16);
+
+		for (short i = 0; i < 16 * 16 * 16; i++)
+		{
+			postProcessingList.Add(new ShortTag(null, i)); // x | y << 4 | z << 8
+		}
+
+		for (int i = 0; i < 24; i++)
+		{
+			PostProcessingTag.Add(postProcessingList);
+		}
+	}
+
+	public CompoundTag ToTag(string biome, bool updateBlocks, ILogger logger)
 	{
 		CompoundTag tag = new CompoundTag(null);
 
 		tag["xPos"] = new IntTag("xPos", ChunkX);
 		tag["zPos"] = new IntTag("zPos", ChunkZ);
 
-		tag["Status"] = new StringTag("Status", "minecraft:full");
+		tag["Status"] = new StringTag("Status", updateBlocks ? "minecraft:spawn" : "minecraft:full"); // "minecraft:spawn" - "proto chunk", needed for PostProcessing
 		tag["DataVersion"] = new IntTag("DataVersion", 3700);
 		tag["isLightOn"] = new ByteTag("isLightOn", 1);
 
@@ -156,6 +175,11 @@ internal sealed class Chunk
 		}
 
 		tag["block_entities"] = blockEntities;
+
+		if (updateBlocks)
+		{
+			tag["PostProcessing"] = PostProcessingTag;
+		}
 
 		return tag;
 	}
