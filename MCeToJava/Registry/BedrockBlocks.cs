@@ -13,8 +13,8 @@ internal static class BedrockBlocks
 	private static readonly Dictionary<int, BlockNameAndState> idToStateMap = new();
 	private static readonly Dictionary<string, int> nameToId = new();
 
-	public static int AIR { get; private set; }
-	public static int WATER { get; private set; }
+	public static int AirId { get; private set; }
+	public static int WaterId { get; private set; }
 
 	public static void Load(JsonArray root)
 	{
@@ -39,6 +39,7 @@ internal static class BedrockBlocks
 					state[item.Key] = stateElement.GetValue<int>();
 				}
 			}
+
 			BlockNameAndState blockNameAndState = new BlockNameAndState(name, state);
 			if (!stateToIdMap.TryAdd(blockNameAndState, id))
 			{
@@ -53,10 +54,10 @@ internal static class BedrockBlocks
 			}
 		}
 
-		AIR = GetId("minecraft:air", new());
+		AirId = GetId("minecraft:air", new());
 		Dictionary<string, object> hashMap = new();
 		hashMap["liquid_depth"] = 0;
-		WATER = GetId("minecraft:water", hashMap);
+		WaterId = GetId("minecraft:water", hashMap);
 	}
 
 	public static int GetId(string name)

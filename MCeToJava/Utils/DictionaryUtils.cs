@@ -21,20 +21,6 @@ internal static class DictionaryExtensions
 		else return defaultValue;
 	}
 
-	public static TValue? JavaRemove<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key)
-	{
-		TValue? value;
-
-		if (!dic.TryGetValue(key, out value))
-		{
-			value = default;
-		}
-
-		dic.Remove(key);
-
-		return value;
-	}
-
 	public static TValue? ComputeIfAbsent<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue?> mappingFunction)
 	{
 		if (dic.TryGetValue(key, out TValue? value))

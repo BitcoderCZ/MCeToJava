@@ -29,7 +29,7 @@ internal sealed class Chunk
 		ChunkX = x;
 		ChunkZ = z;
 
-		Array.Fill(Blocks, BedrockBlocks.AIR);
+		Array.Fill(Blocks, BedrockBlocks.AirId);
 	}
 
 	static Chunk()
@@ -134,7 +134,7 @@ internal sealed class Chunk
 			foreach (var (id, _) in bedrockPalette)
 			{
 				string? nameAndState = id == SolidAirId ? "fountain:solid_air" : JavaBlocks.GetNameAndState(id);
-				paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AIR)));
+				paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AirId)));
 			}
 
 			Debug.Assert(bedrockPalette.Count > 0);

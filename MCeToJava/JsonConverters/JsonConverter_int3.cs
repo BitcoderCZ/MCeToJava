@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace MCeToJava.Converters;
+namespace MCeToJava.JsonConverters;
 
 internal sealed class JsonConverter_int3 : JsonConverter<int3>
 {

@@ -1,10 +1,9 @@
 ﻿using MCeToJava.Exceptions;
-using MCeToJava.NBT;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace MCeToJava;
+namespace MCeToJava.NBT;
 
 internal static class JsonNbtConverter
 {

@@ -1,15 +1,17 @@
-﻿using MCeToJava.Converters;
+﻿using MCeToJava.JsonConverters;
 using System.Text.Json;
 
 namespace MCeToJava.Utils;
 
-internal static class U
+internal static class JsonUtils
 {
 	private static readonly JsonSerializerOptions DefaultJsonOptions = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-	static U()
+	static JsonUtils()
 	{
+		DefaultJsonOptions.Converters.Add(new JsonConverter_float2());
 		DefaultJsonOptions.Converters.Add(new JsonConverter_int3());
+		DefaultJsonOptions.Converters.Add(new JsonConverter_float3());
 	}
 
 	public static T? DeserializeJson<T>(ReadOnlySpan<char> json)

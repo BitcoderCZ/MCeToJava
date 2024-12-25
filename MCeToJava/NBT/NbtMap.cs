@@ -1,11 +1,12 @@
 ﻿using MCeToJava.Utils;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json.Serialization;
 
 namespace MCeToJava.NBT;
 
-internal sealed class NbtMap
+internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 {
 	public static readonly NbtMap EMPTY = new NbtMap();
 
@@ -309,6 +310,11 @@ internal sealed class NbtMap
 			consumer.Invoke(nm);
 	}
 
+	public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+		=> map.GetEnumerator();
+
+	IEnumerator IEnumerable.GetEnumerator()
+		=> map.GetEnumerator();
 
 	public override bool Equals(object? o)
 	{

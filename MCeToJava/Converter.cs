@@ -3,19 +3,17 @@ using MathUtils.Vectors;
 using MCeToJava.Exceptions;
 using MCeToJava.Models;
 using MCeToJava.Models.MCE;
-using MCeToJava.Models.Vienna;
+using MCeToJava.NBT;
 using MCeToJava.Registry;
 using MCeToJava.Utils;
 using Serilog;
 using SharpNBT;
 using Spectre.Console;
-using System.Buffers;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -102,7 +100,7 @@ internal static partial class Converter
 		Buildplate? buildplate;
 		try
 		{
-			buildplate = U.DeserializeJson<Buildplate>(buildplateText);
+			buildplate = JsonUtils.DeserializeJson<Buildplate>(buildplateText);
 
 			if (buildplate is null)
 			{
@@ -162,7 +160,7 @@ internal static partial class Converter
 
 	public static async Task<WorldData> Convert(string name, Buildplate buildplate, ProgressTask? task, Options options)
 	{
-		BuildplateModel? model = U.DeserializeJson<BuildplateModel>(System.Convert.FromBase64String(buildplate.Model));
+		BuildplateModel? model = JsonUtils.DeserializeJson<BuildplateModel>(System.Convert.FromBase64String(buildplate.Model));
 
 		if (model is null)
 		{
@@ -212,59 +210,62 @@ internal static partial class Converter
 						int paletteIndex = blocks[(x * 16 + y) * 16 + z];
 						var paletteEntry = palette[paletteIndex];
 						int blockId = BedrockBlocks.GetId(paletteEntry.Name);
-						chunk.Blocks[(x * 256 + (y + yOffset)) * 16 + z] = blockId == -1 ? BedrockBlocks.AIR : blockId + paletteEntry.Data;
+						chunk.Blocks[(x * 256 + (y + yOffset)) * 16 + z] = blockId == -1 ? BedrockBlocks.AirId : blockId + paletteEntry.Data;
 					}
 				}
 			}
 		}
 
-		foreach (var blockEntity in model.BlockEntities)
+		if (model.BlockEntities is not null)
 		{
-			JsonNbtConverter.CompoundJsonNbtTag? jsonMap = blockEntity.Data as JsonNbtConverter.CompoundJsonNbtTag;
+			foreach (var blockEntity in model.BlockEntities)
+			{
+				JsonNbtConverter.CompoundJsonNbtTag? jsonMap = blockEntity.Data as JsonNbtConverter.CompoundJsonNbtTag;
 
-			if (jsonMap is null)
-			{
-				options.Logger.Warning($"[{name}] Invalid block entity: Data wasn't compound tag.");
-				continue;
-			}
+				if (jsonMap is null)
+				{
+					options.Logger.Warning($"[{name}] Invalid block entity: Data wasn't compound tag.");
+					continue;
+				}
 
-			var map = jsonMap.Value;
+				var map = jsonMap.Value;
 
-			if (!map.TryGetValue("x", out var xTag) || !map.TryGetValue("y", out var yTag) || !map.TryGetValue("z", out var zTag) || !map.TryGetValue("id", out var idTag))
-			{
-				options.Logger.Warning($"[{name}] Invalid block entity: Missing x, y, z or id tag(s).");
-				continue;
-			}
+				if (!map.TryGetValue("x", out var xTag) || !map.TryGetValue("y", out var yTag) || !map.TryGetValue("z", out var zTag) || !map.TryGetValue("id", out var idTag))
+				{
+					options.Logger.Warning($"[{name}] Invalid block entity: Missing x, y, z or id tag(s).");
+					continue;
+				}
 
-			if (xTag is not JsonNbtConverter.IntJsonNbtTag xInt || blockEntity.Position.X != xInt.Value)
-			{
-				options.Logger.Warning($"[{name}] Invalid block entity: x tags's value doesn't match x position.");
-				continue;
-			}
-			else if (yTag is not JsonNbtConverter.IntJsonNbtTag yInt || blockEntity.Position.Y != yInt.Value)
-			{
-				options.Logger.Warning($"[{name}] Invalid block entity: y tags's value doesn't match y position.");
-				continue;
-			}
-			else if (zTag is not JsonNbtConverter.IntJsonNbtTag zInt || blockEntity.Position.Z != zInt.Value)
-			{
-				options.Logger.Warning($"[{name}] Invalid block entity: z tags's value doesn't match z position.");
-				continue;
-			}
-			else if (idTag is not JsonNbtConverter.StringJsonNbtTag)
-			{
-				options.Logger.Warning($"[{name}] Invalid block entity: id tags's value must be a string.");
-				continue;
-			}
+				if (xTag is not JsonNbtConverter.IntJsonNbtTag xInt || blockEntity.Position.X != xInt.Value)
+				{
+					options.Logger.Warning($"[{name}] Invalid block entity: x tags's value doesn't match x position.");
+					continue;
+				}
+				else if (yTag is not JsonNbtConverter.IntJsonNbtTag yInt || blockEntity.Position.Y != yInt.Value)
+				{
+					options.Logger.Warning($"[{name}] Invalid block entity: y tags's value doesn't match y position.");
+					continue;
+				}
+				else if (zTag is not JsonNbtConverter.IntJsonNbtTag zInt || blockEntity.Position.Z != zInt.Value)
+				{
+					options.Logger.Warning($"[{name}] Invalid block entity: z tags's value doesn't match z position.");
+					continue;
+				}
+				else if (idTag is not JsonNbtConverter.StringJsonNbtTag)
+				{
+					options.Logger.Warning($"[{name}] Invalid block entity: id tags's value must be a string.");
+					continue;
+				}
 
-			int2 chunkPos = ChunkUtils.BlockToChunk(blockEntity.Position.X, blockEntity.Position.Z);
-			if (!chunks.TryGetValue(chunkPos, out var chunk))
-			{
-				chunk = new Chunk(chunkPos.X, chunkPos.Y);
-				chunks.Add(chunkPos, chunk);
-			}
+				int2 chunkPos = ChunkUtils.BlockToChunk(blockEntity.Position.X, blockEntity.Position.Z);
+				if (!chunks.TryGetValue(chunkPos, out var chunk))
+				{
+					chunk = new Chunk(chunkPos.X, chunkPos.Y);
+					chunks.Add(chunkPos, chunk);
+				}
 
-			chunk.BlockEntities.Add(JsonNbtConverter.Convert(jsonMap));
+				chunk.BlockEntities.Add(JsonNbtConverter.Convert(jsonMap));
+			}
 		}
 
 		options.Logger.Information($"[{name}] Converting chunks");
@@ -283,61 +284,13 @@ internal static partial class Converter
 		switch (options.ExportTarget)
 		{
 			case ExportTarget.Java:
-				options.Logger.Information($"[{name}] Creating level.dat");
-
-				using (MemoryStream ms = new MemoryStream())
-				using (GZipStream gzs = new GZipStream(ms, CompressionLevel.Optimal))
-				using (TagWriter writer = new TagWriter(gzs, FormatOptions.Java))
-				{
-					var tag = CreateLevelDat(false, options.Night, options.Biome, options.WorldName);
-
-					// for some reason if the name is empty, the type doesn't get written... wtf, also in this case an empty name is expected
-					// compound type
-					gzs.WriteByte(10);
-
-					// name length
-					Debug.Assert(string.IsNullOrEmpty(tag.Name));
-					gzs.WriteByte(0);
-					gzs.WriteByte(0);
-
-					writer.WriteTag(tag);
-					gzs.Flush();
-
-					ms.Position = 0;
-					worldData.Files.Add("level.dat", ms.ToArray());
-				}
+				Java.AddJavaFiles(worldData, name, options);
 				break;
 			case ExportTarget.Vienna:
-				options.Logger.Information($"[{name}] Creating buildplate_metadata.json");
-
-				worldData.Files.Add("buildplate_metadata.json", Encoding.UTF8.GetBytes(U.SerializeJson(new BuildplateMetadata(
-					1,
-					Math.Max(buildplate.Dimension.X, buildplate.Dimension.Z),
-					buildplate.Offset.Y,
-					options.Night
-				))));
-
-				int fileCount = worldData.Files.Count;
-				var keys = ArrayPool<string>.Shared.Rent(fileCount);
-				try
-				{
-					worldData.Files.Keys.CopyTo(keys, 0);
-
-					for (int i = 0; i < fileCount; i++)
-					{
-						string path = keys[i];
-
-						if (RegionFileRegex().IsMatch(path))
-						{
-							int2 regionPos = RegionPathToPos(path);
-							worldData.Files.Add($"entities/r.{regionPos.X}.{regionPos.Y}.mca", Array.Empty<byte>());
-						}
-					}
-				}
-				finally
-				{
-					ArrayPool<string>.Shared.Return(keys);
-				}
+				Vienna.AddViennaFiles(worldData, buildplate, name, options);
+				break;
+			default:
+				Debug.Fail($"Unknown {nameof(ExportTarget)} '{options.ExportTarget}'");
 				break;
 		}
 
@@ -510,53 +463,6 @@ internal static partial class Converter
 		}
 	}
 
-	private static CompoundTag CreateLevelDat(bool survival, bool night, string biome, string worldName)
-	{
-		CompoundTag dataTag = new NbtBuilder.Compound()
-			.Put("GameType", survival ? 0 : 1)
-			.Put("Difficulty", 1)
-			.Put("DayTime", !night ? 6000 : 18000)
-			.Put("LevelName", worldName)
-			.Put("LastPlayed", DateTimeOffset.UtcNow.ToUnixTimeSeconds())
-			//.Put("MapFeatures", (byte)0)
-			.Put("GameRules", new NbtBuilder.Compound()
-				.Put("doDaylightCycle", "false")
-				.Put("doWeatherCycle", "false")
-				.Put("doMobSpawning", "false")
-				.Put("keepInventory", "true")
-			)
-			.Put("WorldGenSettings", new NbtBuilder.Compound()
-				.Put("seed", 0L)    // TODO
-				.Put("generate_features", (byte)0)
-				.Put("dimensions", new NbtBuilder.Compound()
-					.Put("minecraft:overworld", new NbtBuilder.Compound()
-						.Put("type", "minecraft:overworld")
-						.Put("generator", new NbtBuilder.Compound()
-							.Put("type", "minecraft:flat")
-							.Put("settings", new NbtBuilder.Compound()
-								.Put("layers", new NbtBuilder.List(TagType.Compound))
-								.Put("biome", biome)
-							)
-						)
-					)
-				)
-			)
-			.Put("DataVersion", 3700)
-			.Put("version", 19133)
-			.Put("Version", new NbtBuilder.Compound()
-				.Put("Id", 3700)
-				.Put("Name", "1.20.4")
-				.Put("Series", "main")
-				.Put("Snapshot", (byte)0)
-			)
-			.Put("initialized", (byte)1)
-			.Build("Data");
-
-		CompoundTag tag = new CompoundTag(null);
-		tag["Data"] = dataTag;
-		return tag;
-	}
-
 	private static async Task FillWithAirChunks(WorldData worldData, ProgressTask? task, int groundPos, string biome, ILogger logger)
 	{
 		int numbRegionFiles = 0;
@@ -580,7 +486,7 @@ internal static partial class Converter
 		for (int x = 0, index = 0; x < 16; x++, index += 16 * 256)
 		{
 			Array.Fill(emptyChunk.Blocks, Chunk.SolidAirId, index, groundPos * 16);
-			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AIR, index + groundPos * 16, (256 - groundPos) * 16);
+			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AirId, index + groundPos * 16, (256 - groundPos) * 16);
 		}
 
 		CompoundTag chunkTag = emptyChunk.ToTag(biome, false, logger);
