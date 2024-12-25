@@ -1,4 +1,4 @@
-﻿// <copyright file="Chunk.cs" company="BitcoderCZ">
+﻿// <copyright file="BlockChunk.cs" company="BitcoderCZ">
 // Copyright (c) BitcoderCZ. All rights reserved.
 // </copyright>
 
@@ -12,7 +12,7 @@ using System.Diagnostics;
 namespace MCeToJava;
 
 // https://minecraft.wiki/w/Chunk_format
-internal sealed class Chunk
+internal sealed class BlockChunk
 {
 	public const int SolidAirId = int.MinValue;
 
@@ -27,7 +27,7 @@ internal sealed class Chunk
 
 	private static readonly ListTag PostProcessingTag;
 
-	static Chunk()
+	static BlockChunk()
 	{
 		PostProcessingTag = new ListTag("PostProcessing", TagType.List, 24);
 
@@ -44,7 +44,7 @@ internal sealed class Chunk
 		}
 	}
 
-	public Chunk(int x, int z)
+	public BlockChunk(int x, int z)
 	{
 		ChunkX = x;
 		ChunkZ = z;

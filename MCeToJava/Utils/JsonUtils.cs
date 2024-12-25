@@ -16,6 +16,7 @@ internal static class JsonUtils
 		DefaultJsonOptions.Converters.Add(new JsonConverter_float2());
 		DefaultJsonOptions.Converters.Add(new JsonConverter_int3());
 		DefaultJsonOptions.Converters.Add(new JsonConverter_float3());
+		DefaultJsonOptions.Converters.Add(new JsonConverter_double3());
 	}
 
 	public static T? DeserializeJson<T>(ReadOnlySpan<char> json)

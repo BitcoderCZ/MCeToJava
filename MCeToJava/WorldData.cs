@@ -49,12 +49,12 @@ internal sealed class WorldData
 	}
 
 	// https://minecraft.wiki/w/Region_file_format
-	public void AddChunkNBT(int x, int z, CompoundTag tag)
+	public void AddNBTToRegion(int x, int z, string regionDir, CompoundTag tag)
 	{
 		int2 region = RegionUtils.ChunkToRegion(x, z);
 		int2 local = RegionUtils.ChunkToLocal(x, z);
 
-		string fileName = $"region/r.{region.X}.{region.Y}.mca";
+		string fileName = $"{regionDir}/r.{region.X}.{region.Y}.mca";
 
 		ref byte[] bytes = ref Unsafe.NullRef<byte[]>();
 
@@ -73,14 +73,14 @@ internal sealed class WorldData
 		RegionUtils.WriteChunkNBT(ref bytes, tag, local.X, local.Y);
 	}
 
-	public CompoundTag GetChunkNBT(int x, int z)
+	public CompoundTag GetNBTFromRegion(int x, int z, string regionDir)
 	{
 		int2 region = RegionUtils.ChunkToRegion(x, z);
 		int2 local = RegionUtils.ChunkToLocal(x, z);
 
 		lock (FilesLock)
 		{
-			return RegionUtils.ReadChunkNTB(Files[$"region/r.{region.X}.{region.Y}.mca"], local.X, local.Y);
+			return RegionUtils.ReadChunkNTB(Files[$"{regionDir}/r.{region.X}.{region.Y}.mca"], local.X, local.Y);
 		}
 	}
 

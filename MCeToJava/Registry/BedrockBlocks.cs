@@ -64,7 +64,7 @@ internal static class BedrockBlocks
 
 	public static int GetId(string name)
 		=> name == "fountain:solid_air"
-			? Chunk.SolidAirId
+			? BlockChunk.SolidAirId
 			: NameToId.GetOrDefault(name, -1);
 
 	public static int GetId(string name, Dictionary<string, object> state)

@@ -11,11 +11,6 @@ namespace MCeToJava;
 
 internal class Program
 {
-	public static ILogger FileOnlyLogger = new LoggerConfiguration()
-			.WriteTo.File("logs/debug.txt", rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true, fileSizeLimitBytes: 8338607, outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-			.MinimumLevel.Debug()
-			.CreateLogger();
-
 	private static int Main(string[] args)
 	{
 #if DEBUG

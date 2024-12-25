@@ -7,6 +7,7 @@ using CommandLineParser.Commands;
 using FluentResults;
 using MCeToJava.Models;
 using Serilog;
+using Serilog.Core;
 using Spectre.Console;
 using System.Collections.Concurrent;
 
@@ -31,10 +32,6 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 	[Option('t', "target")]
 	[HelpText("The target to export to, additional files are generated depending on this setting.")]
 	public ExportTarget ExportTarget { get; set; } = ExportTarget.Vienna;
-
-	[Option("night")]
-	[HelpText("If the world's time should be day or night.")]
-	public bool Night { get; set; } = false;
 
 	[Option("world-name")]
 	[HelpText("Name of the exported world.")]
@@ -85,7 +82,7 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 				return ErrorCode.UnknownError;
 			}
 
-			var options = new Converter.Options(Program.FileOnlyLogger, ExportTarget, Biome, Night, WorldName);
+			var options = new Converter.Options(Logger.None, ExportTarget, Biome, WorldName);
 
 			ConcurrentBag<(string Path, Result Result)> failedFiles = [];
 

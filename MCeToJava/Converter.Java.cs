@@ -13,15 +13,15 @@ internal static partial class Converter
 {
 	private static class Java
 	{
-		public static void AddJavaFiles(WorldData worldData, string name, Options options)
+		public static void AddJavaFiles(WorldData worldData, bool night, Options options)
 		{
-			options.Logger.Information($"[{name}] Creating level.dat");
+			options.Logger.Information($"Creating level.dat");
 
 			using (MemoryStream ms = new MemoryStream())
 			using (GZipStream gzs = new GZipStream(ms, CompressionLevel.Optimal))
 			using (TagWriter writer = new TagWriter(gzs, FormatOptions.Java))
 			{
-				var tag = CreateLevelDat(false, options.Night, options.Biome, options.WorldName);
+				var tag = CreateLevelDat(false, night, options.Biome, options.WorldName);
 
 				// for some reason if the name is empty, the type doesn't get written... wtf, also in this case an empty name is expected
 				// compound type

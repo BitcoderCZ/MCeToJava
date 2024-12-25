@@ -32,10 +32,6 @@ internal sealed class ConvertCommand : ConsoleCommand
 	[HelpText("The target to export to, additional files are generated depending on this setting.")]
 	public ExportTarget ExportTarget { get; set; } = ExportTarget.Vienna;
 
-	[Option("night")]
-	[HelpText("If the world's time should be day or night.")]
-	public bool Night { get; set; } = false;
-
 	[Option("world-name")]
 	[HelpText("Name of the exported world.")]
 	[DependsOn(nameof(ExportTarget), ExportTarget.Java)]
@@ -45,7 +41,7 @@ internal sealed class ConvertCommand : ConsoleCommand
 	{
 		try
 		{
-			Result result = Converter.ConvertFile(InPath, OutPath, null, new Converter.Options(Log.Logger, ExportTarget, Biome, Night, WorldName)).ConfigureAwait(false).GetAwaiter().GetResult();
+			Result result = Converter.ConvertFile(InPath, OutPath, null, new Converter.Options(Log.Logger, ExportTarget, Biome, WorldName)).ConfigureAwait(false).GetAwaiter().GetResult();
 
 			return result.IsSuccess
 				? ErrorCode.Success

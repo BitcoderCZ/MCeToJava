@@ -54,9 +54,7 @@ internal static partial class Converter
 
 		task?.StartTask();
 
-		string name = Path.GetFileName(inPath);
-
-		options.Logger.Information($"[{name}] Converting '{Path.GetFullPath(inPath)}'");
+		options.Logger.Information($"Converting '{Path.GetFullPath(inPath)}'");
 
 		string buildplateText;
 		try
@@ -65,12 +63,12 @@ internal static partial class Converter
 		}
 		catch (FileNotFoundException fileNotFound)
 		{
-			options.Logger.Error($"[{name}] File '{fileNotFound.FileName}' wasn't found.");
+			options.Logger.Error($"File '{fileNotFound.FileName}' wasn't found.");
 			return Result.Fail(new ErrorCodeError($"File '{fileNotFound.FileName}' wasn't found", ErrorCode.FileNotFound).CausedBy(fileNotFound));
 		}
 		catch (Exception ex)
 		{
-			options.Logger.Error($"[{name}] Failed to read input file: {ex}");
+			options.Logger.Error($"Failed to read input file: {ex}");
 			return Result.Fail(new ErrorCodeError($"Failed to read input file", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
@@ -88,7 +86,7 @@ internal static partial class Converter
 		}
 		catch (Exception ex)
 		{
-			options.Logger.Error($"[{name}] Failed to parse input file: {ex}");
+			options.Logger.Error($"Failed to parse input file: {ex}");
 			return Result.Fail(new ErrorCodeError($"Failed to parse input file", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
@@ -100,22 +98,22 @@ internal static partial class Converter
 		}
 		catch (Exception ex)
 		{
-			options.Logger.Error($"[{name}] Failed to initialize block registry: {ex}");
+			options.Logger.Error($"Failed to initialize block registry: {ex}");
 			return Result.Fail(new ErrorCodeError($"Failed to initialize block registry", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		WorldData data;
 		try
 		{
-			data = await Convert(name, buildplate, task, options).ConfigureAwait(false);
+			data = await Convert(buildplate, task, options).ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
-			options.Logger.Error($"[{name}] Failed to convert buildplate: {ex}");
+			options.Logger.Error($"Failed to convert buildplate: {ex}");
 			return Result.Fail(new ErrorCodeError($"Failed to convert buildplate", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
-		options.Logger.Information($"[{name}] Writing output zip");
+		options.Logger.Information($"Writing output zip");
 
 		try
 		{
@@ -126,18 +124,18 @@ internal static partial class Converter
 		}
 		catch (Exception ex)
 		{
-			options.Logger.Error($"[{name}] Failed to write output file: {ex}");
+			options.Logger.Error($"Failed to write output file: {ex}");
 			return Result.Fail(new ErrorCodeError($"Failed to write output file", ErrorCode.UnknownError).CausedBy(ex));
 		}
 
 		task?.Increment(1);
 
-		options.Logger.Information($"[{name}] Done");
+		options.Logger.Information($"Done");
 
 		return Result.Ok();
 	}
 
-	public static async Task<WorldData> Convert(string name, Buildplate buildplate, ProgressTask? task, Options options)
+	public static async Task<WorldData> Convert(Buildplate buildplate, ProgressTask? task, Options options)
 	{
 		BuildplateModel model = JsonUtils.DeserializeJson<BuildplateModel>(System.Convert.FromBase64String(buildplate.Model))
 			?? throw new ConvertException("Invalid json - buildplate is null.");
@@ -154,7 +152,7 @@ internal static partial class Converter
 		int lowestY = CalculateLowestY(model);
 		if (lowestY == int.MaxValue)
 		{
-			options.Logger.Error($"[{name}] Failed to calculate lowest y position.");
+			options.Logger.Error($"Failed to calculate lowest y position.");
 		}
 		else
 		{
@@ -163,12 +161,13 @@ internal static partial class Converter
 
 		task?.Increment(1);
 
-		options.Logger.Information($"[{name}] Writing chunks");
-		Dictionary<int2, Chunk> chunks = [];
+		options.Logger.Information($"Writing chunks");
+		Dictionary<int2, BlockChunk> blockChunks = [];
+		Dictionary<int2, EntityChunk> entityChunks = [];
 
 		foreach (var subChunk in model.SubChunks)
 		{
-			Chunk chunk = chunks.ComputeIfAbsent(new int2(subChunk.Position.X, subChunk.Position.Z), pos => new Chunk(pos.X, pos.Y))!;
+			BlockChunk chunk = blockChunks.ComputeIfAbsent(new int2(subChunk.Position.X, subChunk.Position.Z), pos => new BlockChunk(pos.X, pos.Y))!;
 
 			Debug.Assert(subChunk.Position.Y >= 0, "Y chunk position should be positive.");
 
@@ -191,6 +190,19 @@ internal static partial class Converter
 			}
 		}
 
+		foreach (var entity in model.Entities)
+		{
+			int2 chunkPos = ChunkUtils.BlockToChunk((int)entity.Position.X, (int)entity.Position.Z);
+
+			if (!entityChunks.TryGetValue(chunkPos, out var chunk))
+			{
+				chunk = new EntityChunk(chunkPos.X, chunkPos.Y);
+				entityChunks.Add(chunkPos, chunk);
+			}
+
+			chunk.Entities.Add(entity);
+		}
+
 		if (model.BlockEntities is not null)
 		{
 			foreach (var blockEntity in model.BlockEntities)
@@ -199,7 +211,7 @@ internal static partial class Converter
 
 				if (jsonMap is null)
 				{
-					options.Logger.Warning($"[{name}] Invalid block entity: Data wasn't compound tag.");
+					options.Logger.Warning($"Invalid block entity: Data wasn't compound tag.");
 					continue;
 				}
 
@@ -207,51 +219,57 @@ internal static partial class Converter
 
 				if (!map.TryGetValue("x", out var xTag) || !map.TryGetValue("y", out var yTag) || !map.TryGetValue("z", out var zTag) || !map.TryGetValue("id", out var idTag))
 				{
-					options.Logger.Warning($"[{name}] Invalid block entity: Missing x, y, z or id tag(s).");
+					options.Logger.Warning($"Invalid block entity: Missing x, y, z or id tag(s).");
 					continue;
 				}
 
 				if (xTag is not JsonNbtConverter.IntJsonNbtTag xInt || blockEntity.Position.X != xInt.Value)
 				{
-					options.Logger.Warning($"[{name}] Invalid block entity: x tags's value doesn't match x position.");
+					options.Logger.Warning($"Invalid block entity: x tags's value doesn't match x position.");
 					continue;
 				}
 				else if (yTag is not JsonNbtConverter.IntJsonNbtTag yInt || blockEntity.Position.Y != yInt.Value)
 				{
-					options.Logger.Warning($"[{name}] Invalid block entity: y tags's value doesn't match y position.");
+					options.Logger.Warning($"Invalid block entity: y tags's value doesn't match y position.");
 					continue;
 				}
 				else if (zTag is not JsonNbtConverter.IntJsonNbtTag zInt || blockEntity.Position.Z != zInt.Value)
 				{
-					options.Logger.Warning($"[{name}] Invalid block entity: z tags's value doesn't match z position.");
+					options.Logger.Warning($"Invalid block entity: z tags's value doesn't match z position.");
 					continue;
 				}
 				else if (idTag is not JsonNbtConverter.StringJsonNbtTag)
 				{
-					options.Logger.Warning($"[{name}] Invalid block entity: id tags's value must be a string.");
+					options.Logger.Warning($"Invalid block entity: id tags's value must be a string.");
 					continue;
 				}
 
 				int2 chunkPos = ChunkUtils.BlockToChunk(blockEntity.Position.X, blockEntity.Position.Z);
-				if (!chunks.TryGetValue(chunkPos, out var chunk))
+				if (!blockChunks.TryGetValue(chunkPos, out var chunk))
 				{
-					chunk = new Chunk(chunkPos.X, chunkPos.Y);
-					chunks.Add(chunkPos, chunk);
+					chunk = new BlockChunk(chunkPos.X, chunkPos.Y);
+					blockChunks.Add(chunkPos, chunk);
 				}
 
 				chunk.BlockEntities.Add(JsonNbtConverter.Convert(jsonMap));
 			}
 		}
 
-		options.Logger.Information($"[{name}] Converting chunks");
-		foreach (var (pos, chunk) in chunks)
+		options.Logger.Information($"Converting blocks");
+		foreach (var (pos, chunk) in blockChunks)
 		{
-			worldData.AddChunkNBT(pos.X, pos.Y, chunk.ToTag(options.Biome, true, options.Logger));
+			worldData.AddNBTToRegion(pos.X, pos.Y, "region", chunk.ToTag(options.Biome, true, options.Logger));
+		}
+
+		options.Logger.Information($"Converting entities");
+		foreach (var (pos, chunk) in entityChunks)
+		{
+			worldData.AddNBTToRegion(pos.X, pos.Y, "entities", chunk.ToTag(options.Logger));
 		}
 
 		task?.Increment(1);
 
-		options.Logger.Information($"[{name}] Filling region files with empty chunks");
+		options.Logger.Information($"Filling region files with empty chunks");
 		await FillWithAirChunks(worldData, task, buildplate.Offset.Y, options.Biome, options.Logger).ConfigureAwait(false);
 
 		task?.Increment(1);
@@ -259,10 +277,10 @@ internal static partial class Converter
 		switch (options.ExportTarget)
 		{
 			case ExportTarget.Java:
-				Java.AddJavaFiles(worldData, name, options);
+				Java.AddJavaFiles(worldData, model.IsNight, options);
 				break;
 			case ExportTarget.Vienna:
-				Vienna.AddViennaFiles(worldData, buildplate, name, options);
+				Vienna.AddViennaFiles(worldData, buildplate, model.IsNight, options);
 				break;
 			default:
 				Debug.Fail($"Unknown {nameof(ExportTarget)} '{options.ExportTarget}'");
@@ -456,13 +474,13 @@ internal static partial class Converter
 			task.MaxValue += numbRegionFiles;
 		}
 
-		Chunk emptyChunk = new Chunk(0, 0);
+		BlockChunk emptyChunk = new BlockChunk(0, 0);
 
 		// 16x256x16
 		// (x * 256 + y) * 16 + z
 		for (int x = 0, index = 0; x < 16; x++, index += 16 * 256)
 		{
-			Array.Fill(emptyChunk.Blocks, Chunk.SolidAirId, index, groundPos * 16);
+			Array.Fill(emptyChunk.Blocks, BlockChunk.SolidAirId, index, groundPos * 16);
 			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AirId, index + (groundPos * 16), (256 - groundPos) * 16);
 		}
 
@@ -583,12 +601,11 @@ internal static partial class Converter
 
 	public sealed class Options
 	{
-		public Options(ILogger logger, ExportTarget exportTarget, string biome, bool night, string worldName)
+		public Options(ILogger logger, ExportTarget exportTarget, string biome, string worldName)
 		{
 			Logger = logger;
 			ExportTarget = exportTarget;
 			Biome = biome;
-			Night = night;
 			WorldName = worldName;
 		}
 
@@ -597,8 +614,6 @@ internal static partial class Converter
 		public ExportTarget ExportTarget { get; }
 
 		public string Biome { get; }
-
-		public bool Night { get; }
 
 		public string WorldName { get; }
 	}

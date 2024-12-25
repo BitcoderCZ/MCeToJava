@@ -15,15 +15,15 @@ internal static partial class Converter
 {
 	private static class Vienna
 	{
-		public static void AddViennaFiles(WorldData worldData, Buildplate buildplate, string name, Options options)
+		public static void AddViennaFiles(WorldData worldData, Buildplate buildplate, bool night, Options options)
 		{
-			options.Logger.Information($"[{name}] Creating buildplate_metadata.json");
+			options.Logger.Information($"Creating buildplate_metadata.json");
 
 			worldData.Files.Add("buildplate_metadata.json", Encoding.UTF8.GetBytes(JsonUtils.SerializeJson(new BuildplateMetadata(
 				1,
 				Math.Max(buildplate.Dimension.X, buildplate.Dimension.Z),
 				buildplate.Offset.Y,
-				options.Night))));
+				night))));
 
 			int fileCount = worldData.Files.Count;
 			string[] keys = ArrayPool<string>.Shared.Rent(fileCount);
@@ -39,7 +39,7 @@ internal static partial class Converter
 					if (RegionFileRegex().IsMatch(path))
 					{
 						int2 regionPos = RegionPathToPos(path);
-						worldData.Files.Add($"entities/r.{regionPos.X}.{regionPos.Y}.mca", []);
+						worldData.Files.TryAdd($"entities/r.{regionPos.X}.{regionPos.Y}.mca", []); // only add if not already present
 					}
 				}
 			}
