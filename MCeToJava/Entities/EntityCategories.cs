@@ -11,4 +11,6 @@ internal enum EntityCategories
 	CanBreed = 1 << 1,
 	Zombie = 1 << 2,
 	RaidMob = 1 << 3,
+	CanAngry = 1 << 4,
+	CanTame = 1 << 5,
 }

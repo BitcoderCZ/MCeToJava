@@ -21,8 +21,11 @@ internal static partial class EntityConverter
 			["minecraft:rabbit"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 3f, Rabbit.Convert),
 			["minecraft:sheep"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 8f, Sheep.Convert),
 			["minecraft:skeleton"] = new(EntityCategories.Mob, 20f, Skeleton.Convert),
-			["minecraft:spider"] = new(EntityCategories.Mob, 16),
+			["minecraft:snow_golem"] = new(EntityCategories.Mob, 4f, SnowGolem.Convert),
+			["minecraft:spider"] = new(EntityCategories.Mob, 16f),
+			["minecraft:squid"] = new(EntityCategories.Mob, 10f),
 			["minecraft:witch"] = new(EntityCategories.Mob | EntityCategories.RaidMob, 26f, Witch.Convert),
+			["minecraft:wolf"] = new(EntityCategories.CanAngry | EntityCategories.CanTame | EntityCategories.CanBreed | EntityCategories.Mob, 26f, Wolf.Convert),
 			["minecraft:zombie"] = new(EntityCategories.Mob | EntityCategories.Zombie, 20f),
 		}.ToFrozenDictionary();
 

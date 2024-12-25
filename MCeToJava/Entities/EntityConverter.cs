@@ -61,7 +61,10 @@ internal static partial class EntityConverter
 		["genoa:patched_sheep"] = "minecraft:sheep",
 		["genoa:rainbow_sheep"] = "minecraft:sheep",
 		["genoa:rocky_sheep"] = "minecraft:sheep",
-		["genoa:viler_witch"] = "minecraft:witch",
+		["genoa:horned_sheep"] = "minecraft:sheep",
+		["genoa:melon_golem"] = "minecraft:snow_golem",
+		["genoa:glow_squid"] = "minecraft:squid",
+		["genoa:skeleton_wolf"] = "minecraft:wolf",
 	}.ToFrozenDictionary();
 
 	// list of the custom mobs currently supported by fountain
@@ -167,6 +170,16 @@ internal static partial class EntityConverter
 		new ByteTag("PatrolLeader", false),
 		new ByteTag("Patrolling", false),
 	];
+
+	private static readonly ImmutableArray<Tag> CanAngryTags =
+	[
+		new IntTag("AngerTime", 0),
+	];
+
+	private static readonly ImmutableArray<Tag> CanTameTags =
+	[
+		new ByteTag("Sitting", false), // TODO
+	];
 	#endregion
 
 	public static CompoundTag? Convert(Entity entity, ConvertTarget target, ILogger logger)
@@ -206,6 +219,16 @@ internal static partial class EntityConverter
 		if (EnumUtils.HasFlag(in info.Categories, EntityCategories.RaidMob))
 		{
 			WriteRaidMobTags(tag);
+		}
+
+		if (EnumUtils.HasFlag(in info.Categories, EntityCategories.CanAngry))
+		{
+			WriteCanAngryTags(tag);
+		}
+
+		if (EnumUtils.HasFlag(in info.Categories, EntityCategories.CanTame))
+		{
+			WriteCanTameTags(tag);
 		}
 
 		info.ConvertFunc?.Invoke(entity, tag);
@@ -272,6 +295,22 @@ internal static partial class EntityConverter
 	private static void WriteRaidMobTags(CompoundTag tag)
 	{
 		foreach (var item in RaidMobTags)
+		{
+			tag.Add(item);
+		}
+	}
+
+	private static void WriteCanAngryTags(CompoundTag tag)
+	{
+		foreach (var item in CanAngryTags)
+		{
+			tag.Add(item);
+		}
+	}
+
+	private static void WriteCanTameTags(CompoundTag tag)
+	{
+		foreach (var item in CanTameTags)
 		{
 			tag.Add(item);
 		}

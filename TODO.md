@@ -15,3 +15,4 @@
 - piston, moving_block
 
 ## Entities
+- Add missing entities
