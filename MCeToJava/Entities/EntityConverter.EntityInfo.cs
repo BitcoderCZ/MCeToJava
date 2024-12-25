@@ -14,8 +14,11 @@ internal static partial class EntityConverter
 	{
 		public static readonly FrozenDictionary<string, EntityInfo> Info = new Dictionary<string, EntityInfo>
 		{
-			["minecraft:rabbit"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 3, Rabbit.Convert),
-			["minecraft:witch"] = new(EntityCategories.Mob | EntityCategories.RaidMob, 20f),
+			["minecraft:chicken"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 4f, Chicken.Convert),
+			["minecraft:cow"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 10f),
+			["minecraft:llama"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 15f, Llama.Convert),
+			["minecraft:rabbit"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 3f, Rabbit.Convert),
+			["minecraft:witch"] = new(EntityCategories.Mob | EntityCategories.RaidMob, 26f, Witch.Convert),
 			["minecraft:zombie"] = new(EntityCategories.CanBreed | EntityCategories.Mob | EntityCategories.Zombie, 20f),
 		}.ToFrozenDictionary();
 

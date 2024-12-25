@@ -264,7 +264,7 @@ internal static partial class Converter
 		options.Logger.Information($"Converting entities");
 		foreach (var (pos, chunk) in entityChunks)
 		{
-			worldData.AddNBTToRegion(pos.X, pos.Y, "entities", chunk.ToTag(options.Logger));
+			worldData.AddNBTToRegion(pos.X, pos.Y, "entities", chunk.ToTag(options.ConvertTarget, options.Logger));
 		}
 
 		task?.Increment(1);
@@ -274,16 +274,16 @@ internal static partial class Converter
 
 		task?.Increment(1);
 
-		switch (options.ExportTarget)
+		switch (options.ConvertTarget)
 		{
-			case ExportTarget.Java:
+			case ConvertTarget.Java:
 				Java.AddJavaFiles(worldData, model.IsNight, options);
 				break;
-			case ExportTarget.Vienna:
+			case ConvertTarget.Vienna:
 				Vienna.AddViennaFiles(worldData, buildplate, model.IsNight, options);
 				break;
 			default:
-				Debug.Fail($"Unknown {nameof(ExportTarget)} '{options.ExportTarget}'");
+				Debug.Fail($"Unknown {nameof(ConvertTarget)} '{options.ConvertTarget}'");
 				break;
 		}
 
@@ -601,17 +601,17 @@ internal static partial class Converter
 
 	public sealed class Options
 	{
-		public Options(ILogger logger, ExportTarget exportTarget, string biome, string worldName)
+		public Options(ILogger logger, ConvertTarget exportTarget, string biome, string worldName)
 		{
 			Logger = logger;
-			ExportTarget = exportTarget;
+			ConvertTarget = exportTarget;
 			Biome = biome;
 			WorldName = worldName;
 		}
 
 		public ILogger Logger { get; }
 
-		public ExportTarget ExportTarget { get; }
+		public ConvertTarget ConvertTarget { get; }
 
 		public string Biome { get; }
 

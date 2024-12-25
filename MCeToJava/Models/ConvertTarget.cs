@@ -1,10 +1,10 @@
-﻿// <copyright file="ExportTarget.cs" company="BitcoderCZ">
+﻿// <copyright file="ConvertTarget.cs" company="BitcoderCZ">
 // Copyright (c) BitcoderCZ. All rights reserved.
 // </copyright>
 
 namespace MCeToJava.Models;
 
-internal enum ExportTarget
+internal enum ConvertTarget
 {
 	Java,
 	Vienna,

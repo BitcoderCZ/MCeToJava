@@ -3,19 +3,15 @@
 // </copyright>
 
 using MathUtils.Vectors;
+using MCeToJava.Models;
 using MCeToJava.Models.MCE;
 using MCeToJava.Utils;
 using Serilog;
 using SharpNBT;
-using System;
 using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava.Entities;
 
@@ -23,9 +19,64 @@ internal static partial class EntityConverter
 {
 	private static readonly FrozenDictionary<string, string> ToJavaName = new Dictionary<string, string>()
 	{
+		["genoa:cluck_shroom"] = "minecraft:chicken",
+		["genoa:sunset_cow"] = "minecraft:cow",
+		["genoa:rabbit"] = "minecraft:rabbit",
+		["genoa:jolly_llama"] = "minecraft:llama",
 		["genoa:bold_striped_rabbit"] = "minecraft:rabbit",
+		["genoa:freckled_rabbit"] = "minecraft:rabbit",
+		["genoa:harelequin_rabbit"] = "minecraft:rabbit",
+		["genoa:jumbo_rabbit"] = "minecraft:rabbit",
+		["genoa:muddy_foot_rabbit"] = "minecraft:rabbit",
+		["genoa:vested_rabbit"] = "minecraft:rabbit",
 		["genoa:viler_witch"] = "minecraft:witch",
 	}.ToFrozenDictionary();
+
+	// list of the custom mobs currently supported by fountain
+	private static readonly FrozenSet<string> MappedEntities = new string[]
+	{
+		"genoa:amber_chicken",
+		"genoa:bronzed_chicken",
+		"genoa:gold_crested_chicken",
+		"genoa:midnight_chicken",
+		"genoa:skewbald_chicken",
+		"genoa:stormy_chicken",
+
+		"genoa:albino_cow",
+		"genoa:ashen_cow",
+		"genoa:cookie_cow",
+		"genoa:cream_cow",
+		"genoa:dairy_cow",
+		"genoa:pinto_cow",
+		"genoa:sunset_cow",
+		"genoa:umbra_cow",
+		"genoa:wooly_cow",
+
+		"genoa:mottled_pig",
+		"genoa:pale_pig",
+		"genoa:piebald_pig",
+		"genoa:pink_footed_pig",
+		"genoa:sooty_pig",
+		"genoa:spotted_pig",
+
+		"genoa:bold_striped_rabbit",
+		"genoa:freckled_rabbit",
+		"genoa:harelequin_rabbit",
+		"genoa:muddy_foot_rabbit",
+		"genoa:vested_rabbit",
+
+		"genoa:flecked_sheep",
+		"genoa:inky_sheep",
+		"genoa:long_nosed_sheep",
+		"genoa:patched_sheep",
+		"genoa:rainbow_sheep",
+		"genoa:rocky_sheep",
+
+		"genoa:genoa_slime",
+		"genoa:genoa_slime_half",
+		"genoa:genoa_slime_quarter",
+		"genoa:tropical_slime",
+	}.ToFrozenSet();
 
 	#region Tags
 	private static readonly ImmutableArray<Tag> SharedTags =
@@ -86,8 +137,13 @@ internal static partial class EntityConverter
 	];
 	#endregion
 
-	public static CompoundTag? Convert(Entity entity, ILogger logger)
+	public static CompoundTag? Convert(Entity entity, ConvertTarget target, ILogger logger)
 	{
+		if (entity.Name == "minecraft:persona_mob")
+		{
+			return null; // map to villager?
+		}
+
 		string javaName = ToJavaName.GetValueOrDefault(entity.Name) ?? entity.Name;
 
 		if (!EntityInfo.Info.TryGetValue(javaName, out var info))
@@ -98,7 +154,7 @@ internal static partial class EntityConverter
 
 		CompoundTag tag = new CompoundTag(null);
 
-		WriteSharedTags(tag, javaName, entity.Position, entity.Rotation);
+		WriteSharedTags(tag, target == ConvertTarget.Vienna && MappedEntities.Contains(entity.Name) ? entity.Name : javaName, entity.Position, entity.Rotation);
 
 		if (EnumUtils.HasFlag(in info.Categories, EntityCategories.Mob))
 		{

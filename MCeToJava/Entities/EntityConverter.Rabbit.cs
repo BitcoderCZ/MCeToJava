@@ -24,7 +24,7 @@ internal static partial class EntityConverter
 				"genoa:harelequin_rabbit" => 0, // brown
 				"genoa:jumbo_rabbit" => 0, // brown
 				"genoa:muddy_foot_rabbit" => 1, // white
-				"genoa:vested _rabbit" => 3, // white_splotched
+				"genoa:vested_rabbit" => 3, // white_splotched
 				_ => 0, // brown
 			}));
 		}

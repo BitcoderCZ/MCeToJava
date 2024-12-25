@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava.Utils;
 
@@ -29,7 +24,7 @@ internal static class EnumUtils
 					ushort flagVal = Unsafe.As<T, ushort>(ref flag);
 					return (Unsafe.As<T, ushort>(ref valRef) & flagVal) == flagVal;
 				}
-				
+
 			case 4:
 				{
 					uint flagVal = Unsafe.As<T, uint>(ref flag);

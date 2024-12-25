@@ -31,11 +31,11 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 
 	[Option('t', "target")]
 	[HelpText("The target to export to, additional files are generated depending on this setting.")]
-	public ExportTarget ExportTarget { get; set; } = ExportTarget.Vienna;
+	public ConvertTarget ConvertTarget { get; set; } = ConvertTarget.Vienna;
 
 	[Option("world-name")]
 	[HelpText("Name of the exported world.")]
-	[DependsOn(nameof(ExportTarget), ExportTarget.Java)]
+	[DependsOn(nameof(ConvertTarget), ConvertTarget.Java)]
 	public string WorldName { get; set; } = "Buildplate";
 
 	public override int Run()
@@ -82,7 +82,7 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 				return ErrorCode.UnknownError;
 			}
 
-			var options = new Converter.Options(Logger.None, ExportTarget, Biome, WorldName);
+			var options = new Converter.Options(Logger.None, ConvertTarget, Biome, WorldName);
 
 			ConcurrentBag<(string Path, Result Result)> failedFiles = [];
 

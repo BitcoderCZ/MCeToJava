@@ -3,14 +3,10 @@
 // </copyright>
 
 using MCeToJava.Entities;
+using MCeToJava.Models;
 using MCeToJava.Models.MCE;
 using Serilog;
 using SharpNBT;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MCeToJava;
 
@@ -28,7 +24,7 @@ internal sealed class EntityChunk
 		ChunkZ = z;
 	}
 
-	public CompoundTag ToTag(ILogger logger)
+	public CompoundTag ToTag(ConvertTarget target, ILogger logger)
 	{
 		CompoundTag tag = new CompoundTag(null)
 		{
@@ -43,7 +39,7 @@ internal sealed class EntityChunk
 
 		foreach (var entity in Entities)
 		{
-			var entityNbt = EntityConverter.Convert(entity, logger);
+			var entityNbt = EntityConverter.Convert(entity, target, logger);
 
 			if (entityNbt is null)
 			{
