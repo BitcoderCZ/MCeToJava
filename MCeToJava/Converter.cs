@@ -190,17 +190,20 @@ internal static partial class Converter
 			}
 		}
 
-		foreach (var entity in model.Entities)
+		if (model.Entities is not null)
 		{
-			int2 chunkPos = ChunkUtils.BlockToChunk((int)entity.Position.X, (int)entity.Position.Z);
-
-			if (!entityChunks.TryGetValue(chunkPos, out var chunk))
+			foreach (var entity in model.Entities)
 			{
-				chunk = new EntityChunk(chunkPos.X, chunkPos.Y);
-				entityChunks.Add(chunkPos, chunk);
-			}
+				int2 chunkPos = ChunkUtils.BlockToChunk((int)entity.Position.X, (int)entity.Position.Z);
 
-			chunk.Entities.Add(entity);
+				if (!entityChunks.TryGetValue(chunkPos, out var chunk))
+				{
+					chunk = new EntityChunk(chunkPos.X, chunkPos.Y);
+					entityChunks.Add(chunkPos, chunk);
+				}
+
+				chunk.Entities.Add(entity);
+			}
 		}
 
 		if (model.BlockEntities is not null)
