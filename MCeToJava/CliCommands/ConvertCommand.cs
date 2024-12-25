@@ -43,18 +43,11 @@ internal sealed class ConvertCommand : ConsoleCommand
 		{
 			Result result = Converter.ConvertFile(InPath, OutPath, null, new Converter.Options(Log.Logger, ExportTarget, Biome, Night, WorldName)).ConfigureAwait(false).GetAwaiter().GetResult();
 
-			if (result.IsSuccess)
-			{
-				return ErrorCode.Success;
-			}
-			else if (result.HasError<ErrorCodeError>(out var errors))
-			{
-				return errors.First().ErrorCode;
-			}
-			else
-			{
-				return ErrorCode.UnknownError;
-			}
+			return result.IsSuccess
+				? ErrorCode.Success
+				: result.HasError<ErrorCodeError>(out var errors)
+				? errors.First().ErrorCode
+				: ErrorCode.UnknownError;
 		}
 		catch (Exception ex)
 		{

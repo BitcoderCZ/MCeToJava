@@ -22,7 +22,7 @@ internal sealed class NbtType
 
 	private static readonly NbtType[] BY_ID = [END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY, LONG_ARRAY];
 
-	private static readonly Dictionary<Type, NbtType> BY_CLASS = new();
+	private static readonly Dictionary<Type, NbtType> BY_CLASS = [];
 
 	static NbtType()
 	{
@@ -47,24 +47,16 @@ internal sealed class NbtType
 	public string TypeName => Enumeration.GetName();
 
 	public static NbtType FromId(int id)
-	{
-		if (id >= 0 && id < BY_ID.Length)
-		{
-			return BY_ID[id];
-		}
-		else
-		{
-			throw new IndexOutOfRangeException("Tag type id must be greater than 0 and less than " + (BY_ID.Length - 1));
-		}
-	}
+		=> id >= 0 && id < BY_ID.Length
+			? BY_ID[id]
+			: throw new IndexOutOfRangeException($"Tag type id must be greater than 0 and less than {BY_ID.Length - 1}.");
 
 	public static NbtType FromClass(Type tagClass)
 	{
 		NbtType? type = BY_CLASS.GetOrDefault(tagClass);
-		if (type == null)
-			throw new ArgumentException("Tag of class " + tagClass + " does not exist", nameof(tagClass));
-
-		return type;
+		return type is null
+			? throw new ArgumentException($"Tag of class '{tagClass.FullName}' does not exist", nameof(tagClass))
+			: type;
 	}
 }
 

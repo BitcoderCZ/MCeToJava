@@ -51,7 +51,7 @@ internal sealed class SpanStream : Stream
 
 	public SpanStream(Memory<byte> buffer)
 	{
-		buffer = _buffer;
+		_buffer = buffer;
 		_isOpen = true;
 	}
 
@@ -110,10 +110,9 @@ internal sealed class SpanStream : Stream
 	{
 		EnsureNotClosed();
 
-		if (_position >= _length)
-			return -1;
-
-		return _buffer.Span[_position++];
+		return _position < _length
+			? _buffer.Span[_position++]
+			: -1;
 	}
 
 	public override void CopyTo(Stream destination, int bufferSize)
@@ -198,11 +197,11 @@ internal sealed class SpanStream : Stream
 		int count = _length;
 		if (count == 0)
 		{
-			return Array.Empty<byte>();
+			return [];
 		}
 
 		byte[] copy = GC.AllocateUninitializedArray<byte>(count);
-		_buffer.Span.Slice(0, count).CopyTo(copy);
+		_buffer.Span[..count].CopyTo(copy);
 		return copy;
 	}
 
@@ -230,13 +229,13 @@ internal sealed class SpanStream : Stream
 
 			if (mustZero)
 			{
-				bufferSpan.Slice(_length, i - _length).Clear();
+				bufferSpan[_length..i].Clear();
 			}
 
 			_length = i;
 		}
 
-		if ((count <= 8))
+		if (count <= 8)
 		{
 			int byteCount = count;
 			while (--byteCount >= 0)
@@ -275,7 +274,7 @@ internal sealed class SpanStream : Stream
 
 			if (mustZero)
 			{
-				bufferSpan.Slice(_length, i - _length).Clear();
+				bufferSpan[_length..i].Clear();
 			}
 
 			_length = i;
@@ -302,7 +301,7 @@ internal sealed class SpanStream : Stream
 
 			if (mustZero)
 			{
-				bufferSpan.Slice(_length, _position - _length).Clear();
+				bufferSpan[_length.._position].Clear();
 			}
 
 			_length = newLength;
@@ -318,7 +317,7 @@ internal sealed class SpanStream : Stream
 
 		EnsureNotClosed();
 
-		stream.Write(_buffer.Span.Slice(0, _length));
+		stream.Write(_buffer.Span[.._length]);
 	}
 
 	protected override void Dispose(bool disposing)
@@ -345,7 +344,5 @@ internal sealed class SpanStream : Stream
 	}
 
 	private void EnsureNotClosed()
-	{
-		ObjectDisposedException.ThrowIf(!_isOpen, this);
-	}
+		=> ObjectDisposedException.ThrowIf(!_isOpen, this);
 }

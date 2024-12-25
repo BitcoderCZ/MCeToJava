@@ -58,7 +58,7 @@ internal sealed class WorldData
 		{
 			if (!Files.ContainsKey(fileName))
 			{
-				Files.Add(fileName, Array.Empty<byte>());
+				Files.Add(fileName, []);
 			}
 
 			bytes = ref CollectionsMarshal.GetValueRefOrNullRef(Files, fileName);

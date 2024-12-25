@@ -90,10 +90,11 @@ internal static class NbtUtils
 				i += 2;
 			}
 		}
+
 		return builder.ToString();
 	}
 
-	private static readonly char[] HEX_CODE = "0123456789ABCDEF".ToArray();
+	private static readonly char[] HEX_CODE = [.. "0123456789ABCDEF"];
 
 	public static string PrintHexBinary(byte[] data)
 	{
@@ -101,8 +102,9 @@ internal static class NbtUtils
 		foreach (byte b in data)
 		{
 			r.Append(HEX_CODE[(b >> 4) & 0xF]);
-			r.Append(HEX_CODE[(b & 0xF)]);
+			r.Append(HEX_CODE[b & 0xF]);
 		}
+
 		return r.ToString();
 	}
 
@@ -129,7 +131,7 @@ internal static class NbtUtils
 			case NbtList list:
 				{
 					ListTag listTag = new ListTag(name, list.Type.Enumeration, list.Count);
-					foreach (var item in list)
+					foreach (object? item in list)
 					{
 						var tag = CreateTag(null, item);
 						if (tag is not null)

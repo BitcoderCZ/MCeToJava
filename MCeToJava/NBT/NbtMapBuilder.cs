@@ -6,9 +6,9 @@ namespace MCeToJava.NBT;
 
 internal sealed class NbtMapBuilder : IDictionary<string, object>
 {
-	public static NbtMapBuilder from(NbtMap map)
+	public static NbtMapBuilder From(NbtMap map)
 	{
-		NbtMapBuilder builder = new NbtMapBuilder();
+		NbtMapBuilder builder = [];
 		builder.map.AddRange(map.map);
 		return builder;
 	}
@@ -170,15 +170,8 @@ internal sealed class NbtMapBuilder : IDictionary<string, object>
 	}
 
 	public NbtMap Build()
-	{
-		if (Count == 0)
-			return NbtMap.EMPTY;
-
-		return new NbtMap(this);
-	}
+		=> Count == 0 ? NbtMap.EMPTY : new NbtMap(this);
 
 	public override string ToString()
-	{
-		return NbtMap.MapToString(this);
-	}
+		=> NbtMap.MapToString(this);
 }

@@ -160,12 +160,8 @@ internal static partial class Converter
 
 	public static async Task<WorldData> Convert(string name, Buildplate buildplate, ProgressTask? task, Options options)
 	{
-		BuildplateModel? model = JsonUtils.DeserializeJson<BuildplateModel>(System.Convert.FromBase64String(buildplate.Model));
-
-		if (model is null)
-		{
-			throw new ConvertException("Invalid json - buildplate is null.");
-		}
+		BuildplateModel model = JsonUtils.DeserializeJson<BuildplateModel>(System.Convert.FromBase64String(buildplate.Model))
+			?? throw new ConvertException("Invalid json - buildplate is null.");
 
 		if (model.FormatVersion != 1)
 		{
@@ -197,8 +193,8 @@ internal static partial class Converter
 
 			Debug.Assert(subChunk.Position.Y >= 0);
 
-			var blocks = subChunk.Blocks;
-			var palette = subChunk.BlockPalette;
+			int[] blocks = subChunk.Blocks;
+			List<PaletteEntry> palette = subChunk.BlockPalette;
 
 			int yOffset = subChunk.Position.Y * 16;
 			for (int x = 0; x < 16; x++)
@@ -330,8 +326,8 @@ internal static partial class Converter
 		int lowestChunkY = model.SubChunks.Min(chunk => chunk.Position.Y);
 		foreach (var subChunk in model.SubChunks.Where(chunk => chunk.Position.Y == lowestChunkY))
 		{
-			var blocks = subChunk.Blocks;
-			var palette = subChunk.BlockPalette;
+			int[] blocks = subChunk.Blocks;
+			List<PaletteEntry> palette = subChunk.BlockPalette;
 
 			int yOffset = subChunk.Position.Y * 16;
 

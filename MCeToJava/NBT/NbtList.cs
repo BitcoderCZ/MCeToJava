@@ -42,55 +42,34 @@ internal sealed class NbtList : IList
 	public NbtType Type { get; }
 
 	public object Get(int index)
-	{
-		if (index < 0 || index >= _array.Length)
-			throw new IndexOutOfRangeException("Expected 0-" + (_array.Length - 1) + ". Got " + index);
-
-		return NbtUtils.Clone(_array.GetValue(index)!);
-	}
+		=> index >= 0 && index < _array.Length
+			? NbtUtils.Clone(_array.GetValue(index)!)
+			: throw new IndexOutOfRangeException("Expected 0-" + (_array.Length - 1) + ". Got " + index);
 
 	public int Add(object? value)
-	{
-		throw new InvalidOperationException();
-	}
+		=> throw new InvalidOperationException();
 
 	public void Clear()
-	{
-		throw new InvalidOperationException();
-	}
+		=> throw new InvalidOperationException();
 
 	public bool Contains(object? value)
-	{
-		return Array.IndexOf(_array, value) >= 0;
-	}
+		=> Array.IndexOf(_array, value) != -1;
 
 	public int IndexOf(object? value)
-	{
-		return Array.IndexOf(_array, value);
-	}
+		=> Array.IndexOf(_array, value);
 
 	public void Insert(int index, object? value)
-	{
-		throw new InvalidOperationException();
-	}
+		=> throw new InvalidOperationException();
 
 	public void Remove(object? value)
-	{
-		throw new InvalidOperationException();
-	}
+		=> throw new InvalidOperationException();
 
 	public void RemoveAt(int index)
-	{
-		throw new InvalidOperationException();
-	}
+		=> throw new InvalidOperationException();
 
 	public void CopyTo(Array array, int index)
-	{
-		_array.CopyTo(array, index);
-	}
+		=> _array.CopyTo(array, index);
 
 	public IEnumerator GetEnumerator()
-	{
-		return _array.GetEnumerator();
-	}
+		=> _array.GetEnumerator();
 }

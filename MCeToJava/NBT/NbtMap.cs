@@ -30,46 +30,32 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public static NbtMapBuilder CreateBuilder()
-	{
-		return new NbtMapBuilder();
-	}
+#pragma warning disable IDE0028 // Simplify collection initialization
+		=> new NbtMapBuilder();
+#pragma warning restore IDE0028
 
 	public NbtMapBuilder ToBuilder()
-	{
-		return NbtMapBuilder.from(this);
-	}
+		=> NbtMapBuilder.From(this);
 
 	public bool ContainsKey(string key)
 		=> map.ContainsKey(key);
 
 	public bool ContainsKey(string key, NbtType type)
-	{
-		if (map.TryGetValue(key, out object? o))
-			return o.GetType() == type.TagClass;
-		else
-			return false;
-	}
+		=> map.TryGetValue(key, out object? o) && o.GetType() == type.TagClass;
 
 	public bool TryGetValue(string key, [MaybeNullWhen(false)] out object? value)
 		=> map.TryGetValue(key, out value);
 
 	public object? Get(string key)
-	{
-		return NbtUtils.CloneObject(map.GetOrDefault(key));
-	}
+		=> NbtUtils.CloneObject(map.GetOrDefault(key));
 
 	public bool GetBool(string key)
-	{
-		return GetBool(key, false);
-	}
+		=> GetBool(key, false);
 
 	public bool GetBool(string key, bool defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is byte b)
-			return b != 0;
-
-		return defaultValue;
+		return tag is byte b ? b != 0 : defaultValue;
 	}
 
 	public void ListenForBool(string key, Action<bool> consumer)
@@ -80,17 +66,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public byte GetByte(string key)
-	{
-		return GetByte(key, 0);
-	}
+		=> GetByte(key, 0);
 
 	public byte GetByte(string key, byte defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is byte b)
-			return b;
-
-		return defaultValue;
+		return tag is byte b ? b : defaultValue;
 	}
 
 	public void ListenForByte(string key, Action<byte> consumer)
@@ -101,17 +82,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public short GetShort(string key)
-	{
-		return GetShort(key, 0);
-	}
+		=> GetShort(key, 0);
 
 	public short GetShort(string key, short defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is short s)
-			return s;
-
-		return defaultValue;
+		return tag is short s ? s : defaultValue;
 	}
 
 	public void ListenForShort(string key, Action<short> consumer)
@@ -122,17 +98,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public int GetInt(string key)
-	{
-		return GetInt(key, 0);
-	}
+		=> GetInt(key, 0);
 
 	public int GetInt(string key, int defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is int i)
-			return i;
-
-		return defaultValue;
+		return tag is int i ? i : defaultValue;
 	}
 
 	public void ListenForInt(string key, Action<int> consumer)
@@ -143,17 +114,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public long GetLong(string key)
-	{
-		return GetLong(key, 0L);
-	}
+		=> GetLong(key, 0L);
 
 	public long GetLong(string key, long defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is long l)
-			return l;
-
-		return defaultValue;
+		return tag is long l ? l : defaultValue;
 	}
 
 	public void ListenForLong(string key, Action<long> consumer)
@@ -164,17 +130,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public float GetFloat(string key)
-	{
-		return GetFloat(key, 0F);
-	}
+		=> GetFloat(key, 0F);
 
 	public float GetFloat(string key, float defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is float f)
-			return f;
-
-		return defaultValue;
+		return tag is float f ? f : defaultValue;
 	}
 
 	public void ListenForFloat(string key, Action<float> consumer)
@@ -185,17 +146,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public double GetDouble(string key)
-	{
-		return GetDouble(key, 0.0);
-	}
+		=> GetDouble(key, 0.0);
 
 	public double GetDouble(string key, double defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is double d)
-			return d;
-
-		return defaultValue;
+		return tag is double d ? d : defaultValue;
 	}
 
 	public void ListenForDouble(string key, Action<double> consumer)
@@ -206,17 +162,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public string? GetString(string key)
-	{
-		return Getstring(key, string.Empty);
-	}
+		=> Getstring(key, string.Empty);
 
 	public string? Getstring(string key, string? defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is string s)
-			return s;
-
-		return defaultValue;
+		return tag is string s ? s : defaultValue;
 	}
 
 	public void ListenForstring(string key, Action<string> consumer)
@@ -226,18 +177,13 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 			consumer.Invoke(s);
 	}
 
-	public byte[]? getByteArray(string key)
-	{
-		return GetByteArray(key, Array.Empty<byte>());
-	}
+	public byte[]? GetByteArray(string key)
+		=> GetByteArray(key, []);
 
 	public byte[]? GetByteArray(string key, byte[]? defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is byte[] bytes)
-			return (byte[])bytes.Clone();
-
-		return defaultValue;
+		return tag is byte[] bytes ? (byte[])bytes.Clone() : defaultValue;
 	}
 
 	public void ListenForByteArray(string key, Action<byte[]> consumer)
@@ -248,17 +194,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public int[]? GetIntArray(string key)
-	{
-		return GetIntArray(key, Array.Empty<int>());
-	}
+		=> GetIntArray(key, []);
 
 	public int[]? GetIntArray(string key, int[]? defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is int[] ints)
-			return (int[])ints.Clone();
-
-		return defaultValue;
+		return tag is int[] ints ? (int[])ints.Clone() : defaultValue;
 	}
 
 	public void ListenForIntArray(string key, Action<int[]> consumer)
@@ -269,17 +210,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public long[]? GetLongArray(string key)
-	{
-		return GetLongArray(key, Array.Empty<long>());
-	}
+		=> GetLongArray(key, []);
 
 	public long[]? GetLongArray(string key, long[]? defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is long[] longs)
-			return (long[])longs.Clone();
-
-		return defaultValue;
+		return tag is long[] longs ? (long[])longs.Clone() : defaultValue;
 	}
 
 	public void ListenForLongArray(string key, Action<long[]> consumer)
@@ -290,17 +226,12 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public NbtMap? GetCompound(string key)
-	{
-		return GetCompound(key, EMPTY);
-	}
+		=> GetCompound(key, EMPTY);
 
 	public NbtMap? GetCompound(string key, NbtMap? defaultValue)
 	{
 		object? tag = map.GetOrDefault(key);
-		if (tag is NbtMap nm)
-			return nm;
-
-		return defaultValue;
+		return tag is NbtMap nm ? nm : defaultValue;
 	}
 
 	public void ListenForCompound(string key, Action<NbtMap> consumer)
@@ -368,9 +299,7 @@ internal sealed class NbtMap : IEnumerable<KeyValuePair<string, object>>
 	}
 
 	public override string ToString()
-	{
-		return MapToString(map);
-	}
+		=> MapToString(map);
 
 	internal static string MapToString(IDictionary<string, object> map)
 	{

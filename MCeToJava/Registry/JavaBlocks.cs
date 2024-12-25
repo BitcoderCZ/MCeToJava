@@ -40,7 +40,7 @@ internal static class JavaBlocks
 				bedrockIdToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
 				bedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
 				int bracketIndex = nameAndSate.IndexOf('[');
-				nameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate.Substring(0, bracketIndex), nameAndSate);
+				nameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate[..bracketIndex], nameAndSate);
 			}
 			catch (BedrockMappingFailException ex)
 			{
@@ -96,27 +96,19 @@ internal static class JavaBlocks
 
 		string name = bedrockMappingObject["name"]!.GetValue<string>();
 
-		Dictionary<string, object> state = new();
+		Dictionary<string, object> state = [];
 		if (bedrockMappingObject.ContainsKey("state"))
 		{
 			JsonObject stateObject = bedrockMappingObject["state"]!.AsObject();
 			foreach (var (key, stateElement) in stateObject)
 			{
-				switch (stateElement!.GetValueKind())
+				state[key] = stateElement!.GetValueKind() switch
 				{
-					case JsonValueKind.String:
-						state[key] = stateElement.GetValue<string>();
-						break;
-					case JsonValueKind.True:
-						state[key] = 1;
-						break;
-					case JsonValueKind.False:
-						state[key] = 0;
-						break;
-					default:
-						state[key] = stateElement.GetValue<int>();
-						break;
-				}
+					JsonValueKind.String => stateElement.GetValue<string>(),
+					JsonValueKind.True => 1,
+					JsonValueKind.False => 0,
+					_ => stateElement.GetValue<int>(),
+				};
 			}
 		}
 
@@ -141,6 +133,7 @@ internal static class JavaBlocks
 						string color = blockEntityObject["color"]!.GetValue<string>();
 						blockEntity = new BedrockMapping.BedBlockEntity(type, color);
 					}
+
 					break;
 				case "flower_pot":
 					{
@@ -190,18 +183,22 @@ internal static class JavaBlocks
 									contents = builder.Build();
 								}
 							}
+
 							if (contents == null)
 							{
 								throw new BedrockMappingFailException("Could not find contents for flower pot");
 							}
 						}
+
 						blockEntity = new BedrockMapping.FlowerPotBlockEntity(type, contents);
 					}
+
 					break;
 				case "moving_block":
 					{
 						blockEntity = new BedrockMapping.BlockEntityBase(type);
 					}
+
 					break;
 				case "piston":
 					{
@@ -209,6 +206,7 @@ internal static class JavaBlocks
 						bool extended = blockEntityObject["extended"]!.GetValue<bool>();
 						blockEntity = new BedrockMapping.PistonBlockEntity(type, sticky, extended);
 					}
+
 					break;
 			}
 		}
@@ -225,6 +223,7 @@ internal static class JavaBlocks
 						int pitch = extraDataObject["pitch"]!.GetValue<int>();
 						extraData = new BedrockMapping.NoteBlockExtraData(pitch);
 					}
+
 					break;
 			}
 		}
@@ -234,16 +233,7 @@ internal static class JavaBlocks
 
 	// not needed
 	public static string? GetName(int javaId)
-	{
-		if (javaIdToNameAndState.TryGetValue(javaId, out string? name))
-		{
-			return name;
-		}
-		else
-		{
-			return null;
-		}
-	}
+		=> javaIdToNameAndState.TryGetValue(javaId, out string? name) ? name : null;
 
 	public static string? GetNameAndState(int bedrockId)
 	{
@@ -254,7 +244,7 @@ internal static class JavaBlocks
 		else
 		{
 			// fallback
-			var name = BedrockBlocks.GetName(bedrockId);
+			string? name = BedrockBlocks.GetName(bedrockId);
 			if (!string.IsNullOrEmpty(name) && nameToDefaultNameAndState.TryGetValue(name, out nameAndState))
 			{
 				return nameAndState;

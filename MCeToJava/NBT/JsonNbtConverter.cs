@@ -9,7 +9,7 @@ internal static class JsonNbtConverter
 {
 	public static NbtMap Convert(CompoundJsonNbtTag tag)
 	{
-		Dictionary<string, object> value = new();
+		Dictionary<string, object> value = [];
 		foreach (var entry in tag.Value)
 			value[entry.Key] = Convert(entry.Value);
 
@@ -18,7 +18,7 @@ internal static class JsonNbtConverter
 
 	public static NbtList Convert(ListJsonNbtTag tag)
 	{
-		List<object> value = new();
+		List<object> value = [];
 		foreach (JsonNbtTag item in tag.Value)
 			value.Add(Convert(item));
 
@@ -28,22 +28,16 @@ internal static class JsonNbtConverter
 	}
 
 	private static object Convert(JsonNbtTag tag)
-	{
-		if (tag is CompoundJsonNbtTag map)
-			return Convert(map);
-		else if (tag is ListJsonNbtTag list)
-			return Convert(list);
-		else if (tag is IntJsonNbtTag i)
-			return i.Value;
-		else if (tag is ByteJsonNbtTag b)
-			return b.Value;
-		else if (tag is FloatJsonNbtTag f)
-			return f.Value;
-		else if (tag is StringJsonNbtTag s)
-			return s.Value;
-		else
-			throw new UnsupportedOperationException($"Cannot convert tag of type {tag.GetType().Name}");
-	}
+		=> tag switch
+		{
+			CompoundJsonNbtTag map => Convert(map),
+			ListJsonNbtTag list => Convert(list),
+			IntJsonNbtTag i => i.Value,
+			ByteJsonNbtTag b => b.Value,
+			FloatJsonNbtTag f => f.Value,
+			StringJsonNbtTag s => s.Value,
+			_ => throw new UnsupportedOperationException($"Cannot convert tag of type '{tag.GetType().Name}'."),
+		};
 
 	[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 	[JsonDerivedType(typeof(CompoundJsonNbtTag), "compound")]

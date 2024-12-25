@@ -44,7 +44,7 @@ internal static class RegionUtils
 
 		int chunkIndex = LocalToIndex(localX, localZ);
 
-		int offset = BinaryPrimitives.ReadInt32BigEndian(regionData.Slice(chunkIndex * 4)) >> 8;
+		int offset = BinaryPrimitives.ReadInt32BigEndian(regionData[(chunkIndex * 4)..]) >> 8;
 
 		return offset >= 2;
 	}
@@ -59,9 +59,9 @@ internal static class RegionUtils
 
 		int chunkIndex = LocalToIndex(localX, localZ);
 
-		int offset = (BinaryPrimitives.ReadInt32BigEndian(dataSpan.Slice(chunkIndex * 4)) >> 8) * ChunkSize;
+		int offset = (BinaryPrimitives.ReadInt32BigEndian(dataSpan[(chunkIndex * 4)..]) >> 8) * ChunkSize;
 
-		int length = BinaryPrimitives.ReadInt32BigEndian(dataSpan.Slice(offset));
+		int length = BinaryPrimitives.ReadInt32BigEndian(dataSpan[offset..]);
 		compressionType = dataSpan[offset + 4];
 
 		return regionData.Slice(offset + 5, length);
@@ -82,19 +82,19 @@ internal static class RegionUtils
 				{
 					uncompressed = new MemoryStream(chunkData.Length * 2);
 
-					// TODO: ideally use the span dirrectly
 					using GZipStream gZipStream = new GZipStream(new SpanStream(chunkData), CompressionMode.Decompress, false);
 					gZipStream.CopyTo(uncompressed);
 				}
+
 				break;
 			case CompressionTypeZlib:
 				{
 					uncompressed = new MemoryStream(chunkData.Length * 2);
 
-					// TODO: ideally use the span dirrectly
 					using ZLibStream deflateStream = new ZLibStream(new SpanStream(chunkData), CompressionMode.Decompress, false);
 					deflateStream.CopyTo(uncompressed);
 				}
+
 				break;
 			case CompressionTypeNone:
 				{
@@ -139,10 +139,10 @@ internal static class RegionUtils
 		Debug.Assert(index + dataLength + 5 <= regionData.Length);
 		int paddedLength = GetPaddedLength(dataLength);
 
-		BinaryPrimitives.WriteInt32BigEndian(regionData.Slice(chunkIndex * 4), ((index / ChunkSize) << 8) | paddedLength / ChunkSize);
-		BinaryPrimitives.WriteInt32BigEndian(regionData.Slice(chunkIndex * 4 + TimestampOffset), (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+		BinaryPrimitives.WriteInt32BigEndian(regionData[(chunkIndex * 4)..], ((index / ChunkSize) << 8) | paddedLength / ChunkSize);
+		BinaryPrimitives.WriteInt32BigEndian(regionData[(chunkIndex * 4 + TimestampOffset)..], (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
-		BinaryPrimitives.WriteInt32BigEndian(regionData.Slice(index), dataLength);
+		BinaryPrimitives.WriteInt32BigEndian(regionData[index..], dataLength);
 		regionData[index + 4] = compressionType;
 
 		chunkData.Position = 0;

@@ -11,15 +11,10 @@ internal static class DictionaryExtensions
 	}
 
 	public static TValue? GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key)
-	{
-		if (dic.TryGetValue(key, out TValue? value)) return value;
-		else return default;
-	}
+		=> dic.TryGetValue(key, out TValue? value) ? value : default;
+
 	public static TValue? GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue? defaultValue)
-	{
-		if (dic.TryGetValue(key, out TValue? value)) return value;
-		else return defaultValue;
-	}
+		=> dic.TryGetValue(key, out TValue? value) ? value : defaultValue;
 
 	public static TValue? ComputeIfAbsent<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue?> mappingFunction)
 	{
@@ -45,7 +40,7 @@ internal static class DictionaryExtensions
 
 	public static void RemoveIf<TKey, TValue>(this IDictionary<TKey, TValue> dic, Predicate<KeyValuePair<TKey, TValue>> predicate)
 	{
-		List<TKey> toRemove = new List<TKey>();
+		List<TKey> toRemove = [];
 
 		foreach (var item in dic)
 		{

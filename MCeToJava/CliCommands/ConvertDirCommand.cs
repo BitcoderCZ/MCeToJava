@@ -148,14 +148,9 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 		{
 			Console.WriteLine($"{Path.GetFileName(path)} - {string.Join("; ", result.Errors.Select(static err =>
 			{
-				if (err.Reasons.Count == 0)
-				{
-					return err.Message;
-				}
-				else
-				{
-					return err.Message + ": " + string.Join(", ", err.Reasons.Select(err => err.Message));
-				}
+				return err.Reasons.Count == 0
+				? err.Message
+				: err.Message + ": " + string.Join(", ", err.Reasons.Select(err => err.Message));
 			}))}");
 		}
 	}

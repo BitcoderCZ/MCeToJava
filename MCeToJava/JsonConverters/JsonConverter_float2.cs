@@ -30,6 +30,7 @@ internal sealed class JsonConverter_float2 : JsonConverter<float2>
 				string? propertyName = reader.GetString();
 				reader.Read();
 
+#pragma warning disable IDE0045 // Convert to conditional expression
 				if (StringEquals(propertyName, propertyX))
 				{
 					x = reader.GetSingle();
@@ -42,6 +43,7 @@ internal sealed class JsonConverter_float2 : JsonConverter<float2>
 				{
 					throw new JsonException($"Unknown property {propertyName}");
 				}
+#pragma warning restore IDE0045 // Convert to conditional expression
 			}
 		}
 
@@ -49,10 +51,11 @@ internal sealed class JsonConverter_float2 : JsonConverter<float2>
 
 		bool StringEquals(string? a, string? b)
 		{
-			if (a is null || b is null)
-				return a is null && b is null;
-
-			return options.PropertyNameCaseInsensitive ? a.Equals(b, StringComparison.OrdinalIgnoreCase) : a.Equals(b, StringComparison.Ordinal);
+			return a is null || b is null
+				? a is null && b is null
+				: options.PropertyNameCaseInsensitive
+				? a.Equals(b, StringComparison.OrdinalIgnoreCase)
+				: a.Equals(b, StringComparison.Ordinal);
 		}
 	}
 

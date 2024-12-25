@@ -51,14 +51,15 @@ internal sealed class Chunk
 
 	public CompoundTag ToTag(string biome, bool updateBlocks, ILogger logger)
 	{
-		CompoundTag tag = new CompoundTag(null);
+		CompoundTag tag = new CompoundTag(null)
+		{
+			["xPos"] = new IntTag("xPos", ChunkX),
+			["zPos"] = new IntTag("zPos", ChunkZ),
 
-		tag["xPos"] = new IntTag("xPos", ChunkX);
-		tag["zPos"] = new IntTag("zPos", ChunkZ);
-
-		tag["Status"] = new StringTag("Status", updateBlocks ? "minecraft:spawn" : "minecraft:full"); // "minecraft:spawn" - "proto chunk", needed for PostProcessing
-		tag["DataVersion"] = new IntTag("DataVersion", 3700);
-		tag["isLightOn"] = new ByteTag("isLightOn", 1);
+			["Status"] = new StringTag("Status", updateBlocks ? "minecraft:spawn" : "minecraft:full"), // "minecraft:spawn" - "proto chunk", needed for PostProcessing
+			["DataVersion"] = new IntTag("DataVersion", 3700),
+			["isLightOn"] = new ByteTag("isLightOn", 1)
+		};
 
 		ListTag sections = new ListTag("sections", TagType.Compound);
 		tag["sections"] = sections;
@@ -66,9 +67,10 @@ internal sealed class Chunk
 		// init sections
 		for (sbyte i = -5; i <= 20; i++)
 		{
-			CompoundTag section = new CompoundTag(null);
-
-			section["Y"] = new ByteTag("Y", unchecked((byte)i));
+			CompoundTag section = new CompoundTag(null)
+			{
+				["Y"] = new ByteTag("Y", unchecked((byte)i))
+			};
 
 			byte[] skylight = GC.AllocateUninitializedArray<byte>(2048);
 			Array.Fill<byte>(skylight, 255);
@@ -260,6 +262,7 @@ internal sealed class Chunk
 
 				value |= (data[dataIndex++] & ((1L << bits) - 1)) << (j * bits);
 			}
+
 			longArray[i] = value;
 		}
 
@@ -282,8 +285,10 @@ internal sealed class Chunk
 		}
 	}
 
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Might be used when more block entities are supported.")]
 	private static bool IsValidBlockEntityValue(string name, object value, string entityType)
 	{
+#pragma warning disable IDE0066 // Convert switch statement to expression
 		switch (name)
 		{
 			// case "id": // added separately
@@ -296,5 +301,6 @@ internal sealed class Chunk
 			default:
 				return false;
 		}
+#pragma warning restore IDE0066 // Convert switch statement to expression
 	}
 }

@@ -78,9 +78,10 @@ internal static partial class Converter
 				.Put("initialized", (byte)1)
 				.Build("Data");
 
-			CompoundTag tag = new CompoundTag(null);
-			tag["Data"] = dataTag;
-			return tag;
+			return new CompoundTag(null)
+			{
+				["Data"] = dataTag
+			};
 		}
 	}
 }

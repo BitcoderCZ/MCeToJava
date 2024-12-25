@@ -9,9 +9,9 @@ namespace MCeToJava.Registry;
 
 internal static class BedrockBlocks
 {
-	private static readonly Dictionary<BlockNameAndState, int> stateToIdMap = new();
-	private static readonly Dictionary<int, BlockNameAndState> idToStateMap = new();
-	private static readonly Dictionary<string, int> nameToId = new();
+	private static readonly Dictionary<BlockNameAndState, int> stateToIdMap = [];
+	private static readonly Dictionary<int, BlockNameAndState> idToStateMap = [];
+	private static readonly Dictionary<string, int> nameToId = [];
 
 	public static int AirId { get; private set; }
 	public static int WaterId { get; private set; }
@@ -24,20 +24,15 @@ internal static class BedrockBlocks
 
 			int id = obj["id"]!.GetValue<int>();
 			string name = obj["name"]!.GetValue<string>();
-			Dictionary<string, object> state = new();
+			Dictionary<string, object> state = [];
 			JsonObject stateObject = obj["state"]!.AsObject();
 
 			foreach (var item in stateObject)
 			{
 				JsonNode stateElement = item.Value!;
-				if (stateElement.GetValueKind() == JsonValueKind.String)
-				{
-					state[item.Key] = stateElement.GetValue<string>();
-				}
-				else
-				{
-					state[item.Key] = stateElement.GetValue<int>();
-				}
+				state[item.Key] = stateElement.GetValueKind() == JsonValueKind.String
+					? stateElement.GetValue<string>()
+					: stateElement.GetValue<int>();
 			}
 
 			BlockNameAndState blockNameAndState = new BlockNameAndState(name, state);
@@ -54,21 +49,18 @@ internal static class BedrockBlocks
 			}
 		}
 
-		AirId = GetId("minecraft:air", new());
-		Dictionary<string, object> hashMap = new();
-		hashMap["liquid_depth"] = 0;
+		AirId = GetId("minecraft:air", []);
+		Dictionary<string, object> hashMap = new()
+		{
+			["liquid_depth"] = 0
+		};
 		WaterId = GetId("minecraft:water", hashMap);
 	}
 
 	public static int GetId(string name)
-	{
-		if (name == "fountain:solid_air")
-		{
-			return Chunk.SolidAirId;
-		}
-
-		return nameToId.GetOrDefault(name, -1);
-	}
+		=> name == "fountain:solid_air"
+			? Chunk.SolidAirId
+			: nameToId.GetOrDefault(name, -1);
 
 	public static int GetId(string name, Dictionary<string, object> state)
 	{
@@ -77,23 +69,16 @@ internal static class BedrockBlocks
 	}
 
 	public static string? GetName(int id)
-	{
-		if (idToStateMap.TryGetValue(id, out var blockNameAndState))
-		{
-			return blockNameAndState.Name;
-		}
-		else
-		{
-			return null;
-		}
-	}
+		=> idToStateMap.TryGetValue(id, out var blockNameAndState)
+		? blockNameAndState.Name
+		: null;
 
 	// not needed
 	public static Dictionary<string, object>? GetState(int id)
 	{
 		if (idToStateMap.TryGetValue(id, out var blockNameAndState))
 		{
-			Dictionary<string, object> state = new();
+			Dictionary<string, object> state = [];
 			foreach (var item in blockNameAndState.State)
 			{
 				state[item.Key] = item.Value;
@@ -150,9 +135,7 @@ internal static class BedrockBlocks
 		private string DebuggerDisplay => Name;
 
 		public override bool Equals(object? obj)
-		{
-			return obj is BlockNameAndState other && Name == other.Name && State.SequenceEqual(other.State);
-		}
+			=> obj is BlockNameAndState other && Name == other.Name && State.SequenceEqual(other.State);
 
 		public override int GetHashCode()
 		{
@@ -164,6 +147,7 @@ internal static class BedrockBlocks
 					hash = hash * 23 + kvp.Key.GetHashCode();
 					hash = hash * 23 + (kvp.Value?.GetHashCode() ?? 0);
 				}
+
 				return hash;
 			}
 		}

@@ -12,7 +12,7 @@ internal class Program
 			.MinimumLevel.Debug()
 			.CreateLogger();
 
-	static int Main(string[] args)
+	private static int Main(string[] args)
 	{
 #if DEBUG
 		Debugger.Launch();

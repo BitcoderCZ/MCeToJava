@@ -23,7 +23,8 @@ internal static partial class Converter
 			))));
 
 			int fileCount = worldData.Files.Count;
-			var keys = ArrayPool<string>.Shared.Rent(fileCount);
+			string[] keys = ArrayPool<string>.Shared.Rent(fileCount);
+
 			try
 			{
 				worldData.Files.Keys.CopyTo(keys, 0);
@@ -35,7 +36,7 @@ internal static partial class Converter
 					if (RegionFileRegex().IsMatch(path))
 					{
 						int2 regionPos = RegionPathToPos(path);
-						worldData.Files.Add($"entities/r.{regionPos.X}.{regionPos.Y}.mca", Array.Empty<byte>());
+						worldData.Files.Add($"entities/r.{regionPos.X}.{regionPos.Y}.mca", []);
 					}
 				}
 			}
