@@ -17,9 +17,13 @@ internal static partial class EntityConverter
 			["minecraft:chicken"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 4f, Chicken.Convert),
 			["minecraft:cow"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 10f),
 			["minecraft:llama"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 15f, Llama.Convert),
+			["minecraft:pig"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 10f, Pig.Convert),
 			["minecraft:rabbit"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 3f, Rabbit.Convert),
+			["minecraft:sheep"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 8f, Sheep.Convert),
+			["minecraft:skeleton"] = new(EntityCategories.Mob, 20f, Skeleton.Convert),
+			["minecraft:spider"] = new(EntityCategories.Mob, 16),
 			["minecraft:witch"] = new(EntityCategories.Mob | EntityCategories.RaidMob, 26f, Witch.Convert),
-			["minecraft:zombie"] = new(EntityCategories.CanBreed | EntityCategories.Mob | EntityCategories.Zombie, 20f),
+			["minecraft:zombie"] = new(EntityCategories.Mob | EntityCategories.Zombie, 20f),
 		}.ToFrozenDictionary();
 
 		public readonly EntityCategories Categories;

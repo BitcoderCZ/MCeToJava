@@ -17,18 +17,50 @@ namespace MCeToJava.Entities;
 
 internal static partial class EntityConverter
 {
-	private static readonly FrozenDictionary<string, string> ToJavaName = new Dictionary<string, string>()
+	private static readonly FrozenDictionary<string, string> EarthNameToJava = new Dictionary<string, string>()
 	{
+		["genoa:amber_chicken"] = "minecraft:chicken",
+		["genoa:bronzed_chicken"] = "minecraft:chicken",
 		["genoa:cluck_shroom"] = "minecraft:chicken",
+		["genoa:fancy_chicken"] = "minecraft:chicken",
+		["genoa:gold_crested_chicken"] = "minecraft:chicken",
+		["genoa:midnight_chicken"] = "minecraft:chicken",
+		["genoa:skewbald_chicken"] = "minecraft:chicken",
+		["genoa:stormy_chicken"] = "minecraft:chicken",
+		["genoa:albino_cow"] = "minecraft:cow",
+		["genoa:ashen_cow"] = "minecraft:cow",
+		["genoa:cookie_cow"] = "minecraft:cow",
+		["genoa:cream_cow"] = "minecraft:cow",
+		["genoa:dairy_cow"] = "minecraft:cow",
+		["genoa:moo_bloom"] = "minecraft:cow",
+		["genoa:moolip"] = "minecraft:cow",
+		["genoa:pinto_cow"] = "minecraft:cow",
 		["genoa:sunset_cow"] = "minecraft:cow",
+		["genoa:umbra_cow"] = "minecraft:cow",
+		["genoa:wooly_cow"] = "minecraft:cow",
 		["genoa:rabbit"] = "minecraft:rabbit",
 		["genoa:jolly_llama"] = "minecraft:llama",
+		["genoa:dried_mud_pig"] = "minecraft:pig", // the page redirects to normal Muddy Pig, so I'm not sure if this is even real
+		["genoa:mottled_pig"] = "minecraft:pig",
+		["genoa:mud_pig"] = "minecraft:pig",
+		["genoa:pale_pig"] = "minecraft:pig",
+		["genoa:piebald_pig"] = "minecraft:pig",
+		["genoa:pink_footed_pig"] = "minecraft:pig",
+		["genoa:sooty_pig"] = "minecraft:pig",
+		["genoa:spotted_pig"] = "minecraft:pig",
 		["genoa:bold_striped_rabbit"] = "minecraft:rabbit",
 		["genoa:freckled_rabbit"] = "minecraft:rabbit",
 		["genoa:harelequin_rabbit"] = "minecraft:rabbit",
 		["genoa:jumbo_rabbit"] = "minecraft:rabbit",
 		["genoa:muddy_foot_rabbit"] = "minecraft:rabbit",
 		["genoa:vested_rabbit"] = "minecraft:rabbit",
+		["genoa:flecked_sheep"] = "minecraft:sheep",
+		["genoa:fuzzy_sheep"] = "minecraft:sheep",
+		["genoa:inky_sheep"] = "minecraft:sheep",
+		["genoa:long_nosed_sheep"] = "minecraft:sheep",
+		["genoa:patched_sheep"] = "minecraft:sheep",
+		["genoa:rainbow_sheep"] = "minecraft:sheep",
+		["genoa:rocky_sheep"] = "minecraft:sheep",
 		["genoa:viler_witch"] = "minecraft:witch",
 	}.ToFrozenDictionary();
 
@@ -144,7 +176,7 @@ internal static partial class EntityConverter
 			return null; // map to villager?
 		}
 
-		string javaName = ToJavaName.GetValueOrDefault(entity.Name) ?? entity.Name;
+		string javaName = EarthNameToJava.GetValueOrDefault(entity.Name) ?? entity.Name;
 
 		if (!EntityInfo.Info.TryGetValue(javaName, out var info))
 		{

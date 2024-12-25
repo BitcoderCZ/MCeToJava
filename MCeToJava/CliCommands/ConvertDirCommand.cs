@@ -150,9 +150,14 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 			Console.WriteLine($"{Path.GetFileName(path)} - {string.Join("; ", result.Errors.Select(static err =>
 			{
 				return err.Reasons.Count == 0
-				? err.Message
-				: err.Message + ": " + string.Join(", ", err.Reasons.Select(err => err.Message));
+				? ErrorToString(err)
+				: ErrorToString(err) + ": " + string.Join(", ", err.Reasons.Select(err => ErrorToString(err)));
 			}))}");
 		}
 	}
+
+	private static string ErrorToString(IError error)
+		=> error is ExceptionalError ex
+		? ex.Exception.ToString()
+		: error.Message;
 }

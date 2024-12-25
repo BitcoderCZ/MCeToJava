@@ -30,11 +30,12 @@ internal static partial class Converter
 	// Parse buildplate json
 	// Parse model json
 	// Calculate Y, add solid air
-	// Convert (add chunk nbt)
+	// Convert blocks (add chunk nbt)
+	// Convert entities
 	// Fill air
 	// Additional files (level.dat, buildplate_metadata.json)
 	// Write zip
-	public static readonly int NumbProgressStages = 8;
+	public static readonly int NumbProgressStages = 9;
 
 	private static bool registryInitialized = false;
 
