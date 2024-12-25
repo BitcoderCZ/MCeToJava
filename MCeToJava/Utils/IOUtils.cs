@@ -1,4 +1,8 @@
-﻿using System.IO.Compression;
+﻿// <copyright file="IOUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using System.IO.Compression;
 
 namespace MCeToJava.Utils;
 

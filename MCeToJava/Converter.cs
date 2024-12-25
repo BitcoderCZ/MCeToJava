@@ -1,4 +1,8 @@
-﻿using FluentResults;
+﻿// <copyright file="Converter.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using FluentResults;
 using MathUtils.Vectors;
 using MCeToJava.Exceptions;
 using MCeToJava.Models;

@@ -1,4 +1,8 @@
-﻿using MathUtils.Vectors;
+﻿// <copyright file="WorldData.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MathUtils.Vectors;
 using MCeToJava.Utils;
 using SharpNBT;
 using System.Diagnostics;

@@ -1,4 +1,8 @@
-﻿using MathUtils.Vectors;
+﻿// <copyright file="Converter.Vienna.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MathUtils.Vectors;
 using MCeToJava.Models.MCE;
 using MCeToJava.Models.Vienna;
 using MCeToJava.Utils;

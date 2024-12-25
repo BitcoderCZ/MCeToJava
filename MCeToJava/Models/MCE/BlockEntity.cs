@@ -1,4 +1,8 @@
-﻿using MathUtils.Vectors;
+﻿// <copyright file="BlockEntity.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MathUtils.Vectors;
 using MCeToJava.NBT;
 
 namespace MCeToJava.Models.MCE;

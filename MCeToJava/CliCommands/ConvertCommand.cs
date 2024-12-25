@@ -1,4 +1,8 @@
-﻿using CommandLineParser;
+﻿// <copyright file="ConvertCommand.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using CommandLineParser;
 using CommandLineParser.Attributes;
 using CommandLineParser.Commands;
 using FluentResults;

@@ -1,4 +1,8 @@
-﻿namespace MCeToJava;
+﻿// <copyright file="ErrorCode.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+namespace MCeToJava;
 
 internal static class ErrorCode
 {

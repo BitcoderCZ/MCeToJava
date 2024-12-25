@@ -1,4 +1,8 @@
-﻿using System.Collections;
+﻿// <copyright file="NbtList.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using System.Collections;
 
 namespace MCeToJava.NBT;
 

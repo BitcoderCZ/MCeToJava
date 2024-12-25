@@ -1,4 +1,8 @@
-﻿namespace MCeToJava.Utils;
+﻿// <copyright file="ParallelUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+namespace MCeToJava.Utils;
 
 internal static class ParallelUtils
 {

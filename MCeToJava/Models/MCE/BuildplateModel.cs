@@ -1,4 +1,8 @@
-﻿using System.Text.Json.Serialization;
+﻿// <copyright file="BuildplateModel.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using System.Text.Json.Serialization;
 
 namespace MCeToJava.Models.MCE;
 

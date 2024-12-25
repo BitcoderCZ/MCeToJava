@@ -1,4 +1,8 @@
-﻿using CommandLineParser;
+﻿// <copyright file="Program.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using CommandLineParser;
 using MCeToJava.CliCommands;
 using Serilog;
 using System.Diagnostics;

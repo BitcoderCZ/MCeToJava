@@ -1,4 +1,8 @@
-﻿using SharpNBT;
+﻿// <copyright file="NbtBuilder.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using SharpNBT;
 
 namespace MCeToJava.Utils;
 

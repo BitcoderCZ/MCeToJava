@@ -1,4 +1,8 @@
-﻿using SharpNBT;
+﻿// <copyright file="NbtUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using SharpNBT;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;

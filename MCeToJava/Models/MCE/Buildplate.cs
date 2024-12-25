@@ -1,4 +1,8 @@
-﻿using MathUtils.Vectors;
+﻿// <copyright file="Buildplate.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MathUtils.Vectors;
 using System.Text.Json.Serialization;
 
 namespace MCeToJava.Models.MCE;

@@ -1,4 +1,8 @@
-﻿using System.Collections;
+﻿// <copyright file="ObjectUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using System.Collections;
 using System.Reflection;
 
 namespace MCeToJava.Utils;

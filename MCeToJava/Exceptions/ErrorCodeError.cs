@@ -1,4 +1,8 @@
-﻿using FluentResults;
+﻿// <copyright file="ErrorCodeError.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using FluentResults;
 
 namespace MCeToJava.Exceptions;
 

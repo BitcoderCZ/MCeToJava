@@ -1,4 +1,8 @@
-﻿using MCeToJava.JsonConverters;
+﻿// <copyright file="JsonUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.JsonConverters;
 using System.Text.Json;
 
 namespace MCeToJava.Utils;

@@ -1,4 +1,8 @@
-﻿namespace MCeToJava.Utils;
+﻿// <copyright file="DictionaryUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+namespace MCeToJava.Utils;
 
 internal static class DictionaryUtils
 {

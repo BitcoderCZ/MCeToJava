@@ -1,11 +1,13 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// <copyright file="SpanStream.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
 
 using System.Diagnostics;
 
 namespace MCeToJava.Utils;
 
-// modified MemoryStream using Memory<byte> instead of byte[]
+// Adapted from MemoryStream implementation in .NET Runtime.
+// Copyright (c) .NET Foundation and Contributors. Licensed under the MIT License.
 // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/IO/MemoryStream.cs
 internal sealed class SpanStream : Stream
 {

@@ -1,4 +1,8 @@
-﻿using MCeToJava.NBT;
+﻿// <copyright file="Chunk.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.NBT;
 using MCeToJava.Registry;
 using MCeToJava.Utils;
 using Serilog;

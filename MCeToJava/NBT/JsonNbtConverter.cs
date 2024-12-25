@@ -1,4 +1,8 @@
-﻿using MCeToJava.Exceptions;
+﻿// <copyright file="JsonNbtConverter.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.Exceptions;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 

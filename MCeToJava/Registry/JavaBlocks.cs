@@ -1,4 +1,8 @@
-﻿using MCeToJava.NBT;
+﻿// <copyright file="JavaBlocks.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.NBT;
 using Serilog;
 using System.Text.Json;
 using System.Text.Json.Nodes;

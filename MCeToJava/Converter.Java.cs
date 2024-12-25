@@ -1,4 +1,8 @@
-﻿using MCeToJava.Utils;
+﻿// <copyright file="Converter.Java.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.Utils;
 using SharpNBT;
 using System.Diagnostics;
 using System.IO.Compression;

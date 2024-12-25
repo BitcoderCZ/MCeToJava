@@ -1,4 +1,8 @@
-﻿using MCeToJava.NBT;
+﻿// <copyright file="BedrockBlocks.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.NBT;
 using MCeToJava.Utils;
 using Serilog;
 using System.Diagnostics;

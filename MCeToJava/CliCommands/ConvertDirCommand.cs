@@ -1,4 +1,8 @@
-﻿using CommandLineParser.Attributes;
+﻿// <copyright file="ConvertDirCommand.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using CommandLineParser.Attributes;
 using CommandLineParser.Commands;
 using FluentResults;
 using MCeToJava.Models;

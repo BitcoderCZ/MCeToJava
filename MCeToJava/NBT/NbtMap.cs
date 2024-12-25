@@ -1,4 +1,8 @@
-﻿using MCeToJava.Utils;
+﻿// <copyright file="NbtMap.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using MCeToJava.Utils;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
