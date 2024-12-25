@@ -64,7 +64,7 @@ internal sealed class WorldData
 			bytes = ref CollectionsMarshal.GetValueRefOrNullRef(Files, fileName);
 		}
 
-		Debug.Assert(!Unsafe.IsNullRef(ref bytes));
+		Debug.Assert(!Unsafe.IsNullRef(ref bytes), $"{nameof(bytes)} shouldn't be null.");
 
 		RegionUtils.WriteChunkNBT(ref bytes, tag, local.X, local.Y);
 	}

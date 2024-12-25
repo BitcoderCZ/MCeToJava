@@ -1,6 +1,6 @@
 ﻿namespace MCeToJava.Utils;
 
-internal static class DictionaryExtensions
+internal static class DictionaryUtils
 {
 	public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dic, IDictionary<TKey, TValue> dicToAdd)
 	{
@@ -59,13 +59,21 @@ internal static class DictionaryExtensions
 	public static void Merge<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, TValue value, Func<TValue, TValue, TValue> remappingFunction)
 	{
 		if (!dic.TryGetValue(key, out TValue? currentValue) || currentValue == null)
+		{
 			dic[key] = value;
+		}
 		else
 		{
 			TValue res = remappingFunction(currentValue, value);
 
-			if (res == null) dic.Remove(key);
-			else dic[key] = res;
+			if (res == null)
+			{
+				dic.Remove(key);
+			}
+			else
+			{
+				dic[key] = res;
+			}
 		}
 	}
 }

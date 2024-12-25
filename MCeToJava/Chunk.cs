@@ -12,25 +12,16 @@ internal sealed class Chunk
 {
 	public const int SolidAirId = int.MinValue;
 
-	private const int BlockPerSubChunk = 16 * 16 * 16;
-
-	private static readonly ListTag PostProcessingTag;
-
 	public readonly int ChunkX;
 	public readonly int ChunkZ;
 
 	// bedrock ids
 	public readonly int[] Blocks = new int[16 * 256 * 16];
-	//public readonly NbtMap?[] BlockEntities = new NbtMap[16 * 256 * 16];
 	public readonly List<NbtMap> BlockEntities = [];
 
-	public Chunk(int x, int z)
-	{
-		ChunkX = x;
-		ChunkZ = z;
+	private const int BlockPerSubChunk = 16 * 16 * 16;
 
-		Array.Fill(Blocks, BedrockBlocks.AirId);
-	}
+	private static readonly ListTag PostProcessingTag;
 
 	static Chunk()
 	{
@@ -49,6 +40,14 @@ internal sealed class Chunk
 		}
 	}
 
+	public Chunk(int x, int z)
+	{
+		ChunkX = x;
+		ChunkZ = z;
+
+		Array.Fill(Blocks, BedrockBlocks.AirId);
+	}
+
 	public CompoundTag ToTag(string biome, bool updateBlocks, ILogger logger)
 	{
 		CompoundTag tag = new CompoundTag(null)
@@ -58,7 +57,7 @@ internal sealed class Chunk
 
 			["Status"] = new StringTag("Status", updateBlocks ? "minecraft:spawn" : "minecraft:full"), // "minecraft:spawn" - "proto chunk", needed for PostProcessing
 			["DataVersion"] = new IntTag("DataVersion", 3700),
-			["isLightOn"] = new ByteTag("isLightOn", 1)
+			["isLightOn"] = new ByteTag("isLightOn", 1),
 		};
 
 		ListTag sections = new ListTag("sections", TagType.Compound);
@@ -69,7 +68,7 @@ internal sealed class Chunk
 		{
 			CompoundTag section = new CompoundTag(null)
 			{
-				["Y"] = new ByteTag("Y", unchecked((byte)i))
+				["Y"] = new ByteTag("Y", unchecked((byte)i)),
 			};
 
 			byte[] skylight = GC.AllocateUninitializedArray<byte>(2048);
@@ -82,7 +81,7 @@ internal sealed class Chunk
 
 				ListTag biomePalette = new ListTag("palette", TagType.String)
 				{
-					new StringTag(null, biome)
+					new StringTag(null, biome),
 				};
 
 				biomes["palette"] = biomePalette;
@@ -93,7 +92,7 @@ internal sealed class Chunk
 
 				ListTag statePalette = new ListTag("palette", TagType.Compound)
 				{
-					new CompoundTag(null, [new StringTag("Name", "fountain:solid_air")])
+					new CompoundTag(null, [new StringTag("Name", "fountain:solid_air")]),
 				};
 
 				blockStates["palette"] = statePalette;
@@ -127,8 +126,8 @@ internal sealed class Chunk
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						int id = Blocks[(x * 256 + (y + chunkOffset)) * 16 + z];
-						blocks[y * 256 + z * 16 + x] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
+						int id = Blocks[(((x * 256) + (y + chunkOffset)) * 16) + z];
+						blocks[(y * 256) + (z * 16) + x] = bedrockPalette.ComputeIfAbsent(id, _ => bedrockPalette.Count);
 					}
 				}
 			}
@@ -139,7 +138,7 @@ internal sealed class Chunk
 				paletteTag.Add(WritePaletteEntry(nameAndState ?? JavaBlocks.GetNameAndState(BedrockBlocks.AirId)));
 			}
 
-			Debug.Assert(bedrockPalette.Count > 0);
+			Debug.Assert(bedrockPalette.Count > 0, "Palette shouldn't be empty at this point.");
 			if (bedrockPalette.Count > 1)
 			{
 				blockStatesTag["data"] = WriteBitArray(blocks, bedrockPalette.Count, "data");
@@ -157,13 +156,13 @@ internal sealed class Chunk
 
 			CompoundTag entityTag = new CompoundTag(null);
 
-			string entityType = ((string)blockEntity.map["id"]).ToLowerInvariant(); // validated in Converter
+			string entityType = ((string)blockEntity.Map["id"]).ToLowerInvariant(); // validated in Converter
 
 			entityTag["id"] = new StringTag("id", entityType);
 			entityTag["keepPacked"] = new ByteTag("keepPacked", false);
 			entityTag["components"] = new CompoundTag("components");
 
-			foreach (var (key, value) in blockEntity.map)
+			foreach (var (key, value) in blockEntity.Map)
 			{
 				var itemTag = NbtUtils.CreateTag(key, value);
 
@@ -186,10 +185,9 @@ internal sealed class Chunk
 		return tag;
 	}
 
-	/// <exception cref="Exception"></exception>
 	private static CompoundTag WritePaletteEntry(ReadOnlySpan<char> name)
 	{
-		Debug.Assert(name.Length > 0);
+		Debug.Assert(name.Length > 0, "Block name shouldn't be empty.");
 
 		CompoundTag tag = new CompoundTag(null);
 
@@ -218,8 +216,8 @@ internal sealed class Chunk
 			}
 
 			int equalsIndex = name.IndexOf('=');
-			Debug.Assert(equalsIndex != -1);
-			Debug.Assert(equalsIndex < commaIndex);
+			Debug.Assert(equalsIndex != -1, "Name should now contain '='.");
+			Debug.Assert(equalsIndex < commaIndex, "'=' should be before ','.");
 
 			string propName = new string(name[..equalsIndex]);
 			string propVal = new string(name[(equalsIndex + 1)..commaIndex]);
@@ -258,7 +256,10 @@ internal sealed class Chunk
 			long value = 0;
 			for (int j = 0; j < valuesPerLong; j++)
 			{
-				if (dataIndex >= data.Length) break;
+				if (dataIndex >= data.Length)
+				{
+					break;
+				}
 
 				value |= (data[dataIndex++] & ((1L << bits) - 1)) << (j * bits);
 			}

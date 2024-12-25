@@ -6,28 +6,28 @@ namespace MCeToJava.NBT;
 
 internal sealed class NbtMapBuilder : IDictionary<string, object>
 {
-	public static NbtMapBuilder From(NbtMap map)
-	{
-		NbtMapBuilder builder = [];
-		builder.map.AddRange(map.map);
-		return builder;
-	}
+	private readonly Dictionary<string, object> _map = [];
 
-	private readonly Dictionary<string, object> map = [];
+	public ICollection<string> Keys => _map.Keys;
+
+	public ICollection<object> Values => _map.Values;
+
+	public int Count => _map.Count;
+
+	public bool IsReadOnly => false;
 
 	public object this[string key]
 	{
-		get => map[key];
-		set => map[key] = value;
+		get => _map[key];
+		set => _map[key] = value;
 	}
 
-	public ICollection<string> Keys => map.Keys;
-
-	public ICollection<object> Values => map.Values;
-
-	public int Count => map.Count;
-
-	public bool IsReadOnly => false;
+	public static NbtMapBuilder From(NbtMap map)
+	{
+		NbtMapBuilder builder = [];
+		builder._map.AddRange(map.Map);
+		return builder;
+	}
 
 	public void Add(string key, object value)
 	{
@@ -46,30 +46,31 @@ internal sealed class NbtMapBuilder : IDictionary<string, object>
 		=> Add(item.Key, item.Value);
 
 	public void Clear()
-		=> map.Clear();
+		=> _map.Clear();
 
 	public bool Contains(KeyValuePair<string, object> item)
-		=> map.Contains(item);
+		=> _map.Contains(item);
 
 	public bool ContainsKey(string key)
-		=> map.ContainsKey(key);
+		=> _map.ContainsKey(key);
 
 	public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
-		=> ((ICollection<KeyValuePair<string, object>>)map).CopyTo(array, arrayIndex);
+		=> ((ICollection<KeyValuePair<string, object>>)_map).CopyTo(array, arrayIndex);
 
 	public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
-		=> map.GetEnumerator();
+		=> _map.GetEnumerator();
 
 	public bool Remove(string key)
-		=> map.Remove(key);
+		=> _map.Remove(key);
+
 	public bool Remove(KeyValuePair<string, object> item)
-		=> ((ICollection<KeyValuePair<string, object>>)map).Remove(item);
+		=> ((ICollection<KeyValuePair<string, object>>)_map).Remove(item);
 
 	public bool TryGetValue(string key, [MaybeNullWhen(false)] out object value)
-		=> map.TryGetValue(key, out value);
+		=> _map.TryGetValue(key, out value);
 
 	IEnumerator IEnumerable.GetEnumerator()
-		=> map.GetEnumerator();
+		=> _map.GetEnumerator();
 
 	public NbtMapBuilder PutBoolean(string name, bool value)
 	{
@@ -152,7 +153,9 @@ internal sealed class NbtMapBuilder : IDictionary<string, object>
 	public NbtMapBuilder PutList(string name, NbtType type, IList list)
 	{
 		if (list is not NbtList)
+		{
 			list = new NbtList(type, list);
+		}
 
 		Add(name, list);
 		return this;

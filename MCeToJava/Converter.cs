@@ -34,31 +34,6 @@ internal static partial class Converter
 
 	private static bool registryInitialized = false;
 
-	public sealed class Options
-	{
-		public Options(ILogger logger, ExportTarget exportTarget, string biome, bool night, string worldName)
-		{
-			Logger = logger;
-			ExportTarget = exportTarget;
-			Biome = biome;
-			Night = night;
-			WorldName = worldName;
-		}
-
-		public ILogger Logger { get; }
-
-		public ExportTarget ExportTarget { get; }
-
-		public string Biome { get; }
-
-		public bool Night { get; }
-
-		public string WorldName { get; }
-	}
-
-	[GeneratedRegex(@"^region/r\.-?\d+\.-?\d+\.mca$")]
-	private static partial Regex RegionFileRegex();
-
 	public static async Task<Result> ConvertFile(string? inPath, string outPath, ProgressTask? task, Options options)
 	{
 		if (task is not null)
@@ -191,7 +166,7 @@ internal static partial class Converter
 		{
 			Chunk chunk = chunks.ComputeIfAbsent(new int2(subChunk.Position.X, subChunk.Position.Z), pos => new Chunk(pos.X, pos.Y))!;
 
-			Debug.Assert(subChunk.Position.Y >= 0);
+			Debug.Assert(subChunk.Position.Y >= 0, "Y chunk position should be positive.");
 
 			int[] blocks = subChunk.Blocks;
 			List<PaletteEntry> palette = subChunk.BlockPalette;
@@ -203,10 +178,10 @@ internal static partial class Converter
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						int paletteIndex = blocks[(x * 16 + y) * 16 + z];
+						int paletteIndex = blocks[(((x * 16) + y) * 16) + z];
 						var paletteEntry = palette[paletteIndex];
 						int blockId = BedrockBlocks.GetId(paletteEntry.Name);
-						chunk.Blocks[(x * 256 + (y + yOffset)) * 16 + z] = blockId == -1 ? BedrockBlocks.AirId : blockId + paletteEntry.Data;
+						chunk.Blocks[(((x * 256) + (y + yOffset)) * 16) + z] = blockId == -1 ? BedrockBlocks.AirId : blockId + paletteEntry.Data;
 					}
 				}
 			}
@@ -307,8 +282,7 @@ internal static partial class Converter
 
 		JavaBlocks.Load(
 			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java.json"))!,
-			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java_nonvanilla.json"))!
-		);
+			JsonSerializer.Deserialize<JsonArray>(ReadFile("blocks_java_nonvanilla.json"))!);
 
 		logger.Information("[registry] Initialization finished");
 
@@ -319,6 +293,9 @@ internal static partial class Converter
 			return File.ReadAllText(Path.Combine("Data", fileName));
 		}
 	}
+
+	[GeneratedRegex(@"^region/r\.-?\d+\.-?\d+\.mca$")]
+	private static partial Regex RegionFileRegex();
 
 	private static int CalculateLowestY(BuildplateModel model)
 	{
@@ -337,7 +314,7 @@ internal static partial class Converter
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						int paletteIndex = blocks[(x * 16 + y) * 16 + z];
+						int paletteIndex = blocks[(((x * 16) + y) * 16) + z];
 						var paletteEntry = palette[paletteIndex];
 
 						switch (paletteEntry.Name)
@@ -360,7 +337,7 @@ internal static partial class Converter
 				}
 			}
 
-		next: { }
+		next:;
 		}
 
 		return lowestY;
@@ -425,7 +402,7 @@ internal static partial class Converter
 							{
 								for (int z = chunkPos.Z == fromChunk.Z ? fromInChunk.Z : 0; z <= zMax; z++)
 								{
-									chunk.Blocks[(x * 16 + y) * 16 + z] = index;
+									chunk.Blocks[(((x * 16) + y) * 16) + z] = index;
 								}
 							}
 						}
@@ -443,7 +420,7 @@ internal static partial class Converter
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		int ChunkDiv(int a, int b)
 		{
-			return (a >= 0) ? a / b : (a + 1) / b - 1;
+			return (a >= 0) ? a / b : ((a + 1) / b) - 1;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -455,7 +432,7 @@ internal static partial class Converter
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		int ChunkToMaxBlock(int pos)
 		{
-			return pos * 16 + 15;
+			return (pos * 16) + 15;
 		}
 	}
 
@@ -482,7 +459,7 @@ internal static partial class Converter
 		for (int x = 0, index = 0; x < 16; x++, index += 16 * 256)
 		{
 			Array.Fill(emptyChunk.Blocks, Chunk.SolidAirId, index, groundPos * 16);
-			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AirId, index + groundPos * 16, (256 - groundPos) * 16);
+			Array.Fill(emptyChunk.Blocks, BedrockBlocks.AirId, index + (groundPos * 16), (256 - groundPos) * 16);
 		}
 
 		CompoundTag chunkTag = emptyChunk.ToTag(biome, false, logger);
@@ -502,7 +479,7 @@ internal static partial class Converter
 			chunkDataStream.WriteByte(10);
 
 			// name length
-			Debug.Assert(string.IsNullOrEmpty(chunkTag.Name));
+			Debug.Assert(string.IsNullOrEmpty(chunkTag.Name), $"{nameof(chunkTag)}.Name should be null or empty.");
 			chunkDataStream.WriteByte(0);
 			chunkDataStream.WriteByte(0);
 
@@ -513,7 +490,7 @@ internal static partial class Converter
 			using MemoryStream compressedStream = new MemoryStream(RegionUtils.ChunkSize);
 
 			ref byte[] data = ref CollectionsMarshal.GetValueRefOrNullRef(worldData.Files, path);
-			Debug.Assert(!Unsafe.IsNullRef(ref data));
+			Debug.Assert(!Unsafe.IsNullRef(ref data), $"{nameof(data)} shouldn't be null.");
 
 			int2 regionPos = RegionPathToPos(path) * RegionUtils.RegionSize;
 
@@ -531,7 +508,7 @@ internal static partial class Converter
 			}
 
 			int index = data.Length;
-			Array.Resize(ref data, data.Length + numbChunksToAdd * RegionUtils.ChunkSize);
+			Array.Resize(ref data, data.Length + (numbChunksToAdd * RegionUtils.ChunkSize));
 
 			if (numbChunksToAdd == 0)
 			{
@@ -578,25 +555,47 @@ internal static partial class Converter
 	#region Helpers
 	private static int2 RegionPathToPos(ReadOnlySpan<char> path)
 	{
-		Debug.Assert(RegionFileRegex().IsMatch(path));
+		Debug.Assert(RegionFileRegex().IsMatch(path), $"{nameof(path)} should corespond to a region file.");
 
-		Debug.Assert(path.StartsWith("region/"));
+		Debug.Assert(path.StartsWith("region/"), $"{nameof(path)} should start with 'region/'");
 		path = path[7..];
 
-		Debug.Assert(!path.Contains('/'));
-		Debug.Assert(path.StartsWith("r."));
+		Debug.Assert(!path.Contains('/'), $"{nameof(path)} shouldn't contain '/' at this point.");
+		Debug.Assert(path.StartsWith("r."), $"{nameof(path)} should start with 'r.' at this point.");
 		path = path[2..];
 
 		int dotIndex = path.IndexOf('.');
-		Debug.Assert(dotIndex != -1);
+		Debug.Assert(dotIndex != -1, $"{nameof(path)} should contain '.' at this point.");
 		int regionX = int.Parse(path[..dotIndex]);
 		path = path[(dotIndex + 1)..];
 
 		dotIndex = path.IndexOf('.');
-		Debug.Assert(dotIndex != -1);
+		Debug.Assert(dotIndex != -1, $"{nameof(path)} should contain '.' at this point.");
 		int regionZ = int.Parse(path[..dotIndex]);
 
 		return new int2(regionX, regionZ);
 	}
 	#endregion
+
+	public sealed class Options
+	{
+		public Options(ILogger logger, ExportTarget exportTarget, string biome, bool night, string worldName)
+		{
+			Logger = logger;
+			ExportTarget = exportTarget;
+			Biome = biome;
+			Night = night;
+			WorldName = worldName;
+		}
+
+		public ILogger Logger { get; }
+
+		public ExportTarget ExportTarget { get; }
+
+		public string Biome { get; }
+
+		public bool Night { get; }
+
+		public string WorldName { get; }
+	}
 }

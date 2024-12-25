@@ -16,6 +16,12 @@ internal sealed class SpanStream : Stream
 	private int _length;
 	private bool _isOpen;
 
+	public SpanStream(Memory<byte> buffer)
+	{
+		_buffer = buffer;
+		_isOpen = true;
+	}
+
 	public override bool CanRead => _isOpen;
 
 	public override bool CanSeek => _isOpen;
@@ -38,6 +44,7 @@ internal sealed class SpanStream : Stream
 			EnsureNotClosed();
 			return _position;
 		}
+
 		set
 		{
 			ArgumentOutOfRangeException.ThrowIfNegative(value);
@@ -47,12 +54,6 @@ internal sealed class SpanStream : Stream
 
 			_position = (int)value;
 		}
-	}
-
-	public SpanStream(Memory<byte> buffer)
-	{
-		_buffer = buffer;
-		_isOpen = true;
 	}
 
 	public override void Flush()
@@ -68,9 +69,14 @@ internal sealed class SpanStream : Stream
 
 		int n = _length - _position;
 		if (n > count)
+		{
 			n = count;
+		}
+
 		if (n <= 0)
+		{
 			return 0;
+		}
 
 		Debug.Assert(_position + n >= 0, "_position + n >= 0");  // len is less than 2^31 -1.
 
@@ -98,7 +104,9 @@ internal sealed class SpanStream : Stream
 
 		int n = Math.Min(_length - _position, buffer.Length);
 		if (n <= 0)
+		{
 			return 0;
+		}
 
 		_buffer.Span.Slice(_position, n).CopyTo(buffer);
 
@@ -154,6 +162,7 @@ internal sealed class SpanStream : Stream
 					_position = tempPosition;
 					break;
 				}
+
 			case SeekOrigin.Current:
 				{
 					int tempPosition = unchecked(_position + (int)offset);
@@ -165,6 +174,7 @@ internal sealed class SpanStream : Stream
 					_position = tempPosition;
 					break;
 				}
+
 			case SeekOrigin.End:
 				{
 					int tempPosition = unchecked(_length + (int)offset);
@@ -176,6 +186,7 @@ internal sealed class SpanStream : Stream
 					_position = tempPosition;
 					break;
 				}
+
 			default:
 				throw new ArgumentException("Invalid seek origin.", nameof(loc));
 		}
@@ -187,7 +198,9 @@ internal sealed class SpanStream : Stream
 	public override void SetLength(long value)
 	{
 		if (value < 0 || value > int.MaxValue)
+		{
 			throw new ArgumentOutOfRangeException(nameof(value), "Stream length must be non-negative and less than 2^31 - 1 - origin.");
+		}
 
 		throw new NotSupportedException($"{nameof(SpanStream)}'s length is fixed.");
 	}
@@ -213,6 +226,7 @@ internal sealed class SpanStream : Stream
 		var bufferSpan = _buffer.Span;
 
 		int i = _position + count;
+
 		// Check for overflow
 		if (i < 0)
 		{
@@ -334,9 +348,14 @@ internal sealed class SpanStream : Stream
 
 		int n = _length - _position;
 		if (n > count)
+		{
 			n = count;
+		}
+
 		if (n < 0)
+		{
 			n = 0;
+		}
 
 		Debug.Assert(_position + n >= 0, "_position + n >= 0");  // len is less than 2^31 -1.
 		_position += n;

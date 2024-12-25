@@ -19,8 +19,7 @@ internal static partial class Converter
 				1,
 				Math.Max(buildplate.Dimension.X, buildplate.Dimension.Z),
 				buildplate.Offset.Y,
-				options.Night
-			))));
+				options.Night))));
 
 			int fileCount = worldData.Files.Count;
 			string[] keys = ArrayPool<string>.Shared.Rent(fileCount);

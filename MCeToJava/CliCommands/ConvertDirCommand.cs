@@ -83,7 +83,7 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 
 			var options = new Converter.Options(Program.FileOnlyLogger, ExportTarget, Biome, Night, WorldName);
 
-			ConcurrentBag<(string Path, Result result)> failedFiles = [];
+			ConcurrentBag<(string Path, Result Result)> failedFiles = [];
 
 			SemaphoreSlim semaphore = new SemaphoreSlim(Math.Max(Environment.ProcessorCount - 1, 1));
 

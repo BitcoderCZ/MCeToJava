@@ -5,6 +5,7 @@ namespace MCeToJava.NBT;
 
 internal sealed class NbtType
 {
+#pragma warning disable SA1310 // Field names should not contain underscore
 	public static readonly NbtType END = new NbtType(typeof(void), TagType.End);
 	public static readonly NbtType BYTE = new NbtType(typeof(byte), TagType.Byte);
 	public static readonly NbtType SHORT = new NbtType(typeof(short), TagType.Short);
@@ -23,6 +24,7 @@ internal sealed class NbtType
 	private static readonly NbtType[] BY_ID = [END, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BYTE_ARRAY, STRING, LIST, COMPOUND, INT_ARRAY, LONG_ARRAY];
 
 	private static readonly Dictionary<Type, NbtType> BY_CLASS = [];
+#pragma warning restore SA1310 // Field names should not contain underscore
 
 	static NbtType()
 	{
@@ -60,7 +62,9 @@ internal sealed class NbtType
 	}
 }
 
+#pragma warning disable SA1204 // Static elements should appear before instance elements
 internal static class NbtType_EnumExtensions
+#pragma warning restore SA1204
 {
 	public static string GetName(this TagType e)
 		=> "TAG_" + Enum.GetName(e);

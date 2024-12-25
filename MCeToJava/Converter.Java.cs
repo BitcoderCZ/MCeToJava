@@ -24,7 +24,7 @@ internal static partial class Converter
 				gzs.WriteByte(10);
 
 				// name length
-				Debug.Assert(string.IsNullOrEmpty(tag.Name));
+				Debug.Assert(string.IsNullOrEmpty(tag.Name), "Tag name should be null or empty.");
 				gzs.WriteByte(0);
 				gzs.WriteByte(0);
 
@@ -44,13 +44,11 @@ internal static partial class Converter
 				.Put("DayTime", !night ? 6000 : 18000)
 				.Put("LevelName", worldName)
 				.Put("LastPlayed", DateTimeOffset.UtcNow.ToUnixTimeSeconds())
-				//.Put("MapFeatures", (byte)0)
 				.Put("GameRules", new NbtBuilder.Compound()
 					.Put("doDaylightCycle", "false")
 					.Put("doWeatherCycle", "false")
 					.Put("doMobSpawning", "false")
-					.Put("keepInventory", "true")
-				)
+					.Put("keepInventory", "true"))
 				.Put("WorldGenSettings", new NbtBuilder.Compound()
 					.Put("seed", 0L)    // TODO
 					.Put("generate_features", (byte)0)
@@ -61,26 +59,20 @@ internal static partial class Converter
 								.Put("type", "minecraft:flat")
 								.Put("settings", new NbtBuilder.Compound()
 									.Put("layers", new NbtBuilder.List(TagType.Compound))
-									.Put("biome", biome)
-								)
-							)
-						)
-					)
-				)
+									.Put("biome", biome))))))
 				.Put("DataVersion", 3700)
 				.Put("version", 19133)
 				.Put("Version", new NbtBuilder.Compound()
 					.Put("Id", 3700)
 					.Put("Name", "1.20.4")
 					.Put("Series", "main")
-					.Put("Snapshot", (byte)0)
-				)
+					.Put("Snapshot", (byte)0))
 				.Put("initialized", (byte)1)
 				.Build("Data");
 
 			return new CompoundTag(null)
 			{
-				["Data"] = dataTag
+				["Data"] = dataTag,
 			};
 		}
 	}

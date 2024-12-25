@@ -8,22 +8,6 @@ internal sealed class NbtList : IList
 
 	private readonly Array _array;
 
-	public bool IsFixedSize => true;
-
-	public bool IsReadOnly => true;
-
-	public int Count => _array.Length;
-
-	public bool IsSynchronized => false;
-
-	public object SyncRoot => null!;
-
-	public object? this[int index]
-	{
-		get => Get(index);
-		set => throw new InvalidOperationException();
-	}
-
 	public NbtList(NbtType type, ICollection collection)
 	{
 		ArgumentNullException.ThrowIfNull(type);
@@ -40,6 +24,22 @@ internal sealed class NbtList : IList
 	}
 
 	public NbtType Type { get; }
+
+	public bool IsFixedSize => true;
+
+	public bool IsReadOnly => true;
+
+	public int Count => _array.Length;
+
+	public bool IsSynchronized => false;
+
+	public object SyncRoot => null!;
+
+	public object? this[int index]
+	{
+		get => Get(index);
+		set => throw new InvalidOperationException();
+	}
 
 	public object Get(int index)
 		=> index >= 0 && index < _array.Length

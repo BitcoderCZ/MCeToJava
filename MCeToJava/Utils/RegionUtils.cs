@@ -55,7 +55,7 @@ internal static class RegionUtils
 
 		var dataSpan = regionData.Span;
 
-		Debug.Assert(ContainsChunk(dataSpan, localX, localZ));
+		Debug.Assert(ContainsChunk(dataSpan, localX, localZ), $"{nameof(regionData)} should contain a chunk at {localX},{localZ}.");
 
 		int chunkIndex = LocalToIndex(localX, localZ);
 
@@ -67,7 +67,7 @@ internal static class RegionUtils
 		return regionData.Slice(offset + 5, length);
 	}
 
-	/// <exception cref="InvalidDataException"></exception>
+	/// <exception cref="InvalidDataException">Thrown if the compression type is invalid.</exception>
 	public static MemoryStream ReadChunkData(Memory<byte> regionData, int localX, int localZ)
 	{
 		ValidateLocalCoords(localX, localZ);
@@ -103,6 +103,7 @@ internal static class RegionUtils
 					uncompressed = new MemoryStream(buffer);
 					break;
 				}
+
 			default:
 				throw new InvalidDataException($"Invalid/unknown compression type '{compressionType}'.");
 		}
@@ -110,7 +111,7 @@ internal static class RegionUtils
 		return uncompressed;
 	}
 
-	/// <exception cref="InvalidDataException"></exception>
+	/// <exception cref="InvalidDataException">Thrown if the compression type is invalid.</exception>
 	public static CompoundTag ReadChunkNTB(Memory<byte> regionData, int localX, int localZ)
 	{
 		ValidateLocalCoords(localX, localZ);
@@ -128,19 +129,19 @@ internal static class RegionUtils
 	{
 		ValidateLocalCoords(localX, localZ);
 
-		Debug.Assert(chunkData.CanRead);
-		Debug.Assert(chunkData.CanSeek);
-		Debug.Assert(index % ChunkSize == 0);
-		Debug.Assert(index / ChunkSize >= 2);
+		Debug.Assert(chunkData.CanRead, $"{nameof(chunkData)} should be readable.");
+		Debug.Assert(chunkData.CanSeek, $"{nameof(chunkData)} should be seekable.");
+		Debug.Assert(index % ChunkSize == 0, $"{nameof(index)} should be a multiple of {nameof(ChunkSize)}.");
+		Debug.Assert(index / ChunkSize >= 2, $"{nameof(index)} should be greater than or equal to 2×{nameof(ChunkSize)}.");
 
 		int chunkIndex = LocalToIndex(localX, localZ);
 
 		int dataLength = checked((int)chunkData.Length);
-		Debug.Assert(index + dataLength + 5 <= regionData.Length);
+		Debug.Assert(index + dataLength + 5 <= regionData.Length, $"There should be enough space in {nameof(regionData)} to fit {nameof(chunkData)} starting at {index}");
 		int paddedLength = GetPaddedLength(dataLength);
 
 		BinaryPrimitives.WriteInt32BigEndian(regionData[(chunkIndex * 4)..], ((index / ChunkSize) << 8) | paddedLength / ChunkSize);
-		BinaryPrimitives.WriteInt32BigEndian(regionData[(chunkIndex * 4 + TimestampOffset)..], (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+		BinaryPrimitives.WriteInt32BigEndian(regionData[((chunkIndex * 4) + TimestampOffset)..], (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
 		BinaryPrimitives.WriteInt32BigEndian(regionData[index..], dataLength);
 		regionData[index + 4] = compressionType;
@@ -162,7 +163,7 @@ internal static class RegionUtils
 		zlib.WriteByte(10);
 
 		// name length
-		Debug.Assert(string.IsNullOrEmpty(chunkNBT.Name));
+		Debug.Assert(string.IsNullOrEmpty(chunkNBT.Name), $"{nameof(chunkNBT)}.Name should be null or empty.");
 		zlib.WriteByte(0);
 		zlib.WriteByte(0);
 
@@ -194,7 +195,7 @@ internal static class RegionUtils
 	[Conditional("DEBUG")]
 	private static void ValidateLocalCoords(int localX, int localZ)
 	{
-		Debug.Assert(localX >= 0 && localX < RegionSize);
-		Debug.Assert(localZ >= 0 && localZ < RegionSize);
+		Debug.Assert(localX >= 0 && localX < RegionSize, $"{nameof(localX)} must be in bounds.");
+		Debug.Assert(localZ >= 0 && localZ < RegionSize, $"{nameof(localZ)} must be in bounds.");
 	}
 }

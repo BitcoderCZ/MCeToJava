@@ -55,29 +55,23 @@ internal static class NbtUtils
 
 	[return: NotNullIfNotNull(nameof(val))]
 	public static T? Clone<T>(T? val)
-	{
-		if (val is byte[] bytes)
-			return (T)bytes.Clone();
-		else if (val is int[] ints)
-			return (T)ints.Clone();
-		else if (val is long[] longs)
-			return (T)longs.Clone();
-
-		return val;
-	}
+		=> val switch
+		{
+			byte[] bytes => (T)bytes.Clone(),
+			int[] ints => (T)ints.Clone(),
+			long[] longs => (T)longs.Clone(),
+			_ => val,
+		};
 
 	[return: NotNullIfNotNull(nameof(val))]
 	public static object? CloneObject(object? val)
-	{
-		if (val is byte[] bytes)
-			return bytes.Clone();
-		else if (val is int[] ints)
-			return ints.Clone();
-		else if (val is long[] longs)
-			return longs.Clone();
-
-		return val;
-	}
+		=> val switch
+		{
+			byte[] bytes => bytes.Clone(),
+			int[] ints => ints.Clone(),
+			long[] longs => longs.Clone(),
+			_ => val,
+		};
 
 	public static string Indent(string str)
 	{
@@ -94,15 +88,17 @@ internal static class NbtUtils
 		return builder.ToString();
 	}
 
-	private static readonly char[] HEX_CODE = [.. "0123456789ABCDEF"];
+#pragma warning disable SA1201 // Elements should appear in the correct order
+	private static readonly char[] HexDigits = [.. "0123456789ABCDEF"];
+#pragma warning restore SA1201
 
 	public static string PrintHexBinary(byte[] data)
 	{
 		StringBuilder r = new StringBuilder(data.Length << 1);
 		foreach (byte b in data)
 		{
-			r.Append(HEX_CODE[(b >> 4) & 0xF]);
-			r.Append(HEX_CODE[b & 0xF]);
+			r.Append(HexDigits[(b >> 4) & 0xF]);
+			r.Append(HexDigits[b & 0xF]);
 		}
 
 		return r.ToString();
@@ -142,11 +138,12 @@ internal static class NbtUtils
 
 					return listTag;
 				}
+
 			case NbtMap map:
 				{
 					CompoundTag compoundTag = new CompoundTag(name);
 
-					foreach (var (key, item) in map.map)
+					foreach (var (key, item) in map.Map)
 					{
 						var tag = CreateTag(key, item);
 						if (tag is not null)
@@ -157,6 +154,7 @@ internal static class NbtUtils
 
 					return compoundTag;
 				}
+
 			case int[] ia:
 				return new IntArrayTag(name, ia);
 			case long[] la:

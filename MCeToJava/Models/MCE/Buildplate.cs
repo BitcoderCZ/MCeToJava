@@ -11,12 +11,12 @@ internal record Buildplate(Guid Id, string ETag, DateTime LastUpdated, bool IsMo
 		Survival,
 	}
 
-	public record struct Flat2(int X, int Z);
-
 	[JsonConverter(typeof(JsonStringEnumConverter))]
 	public enum Orientation
 	{
 		Horizontal,
 		Vertical,
 	}
+
+	public record struct Flat2(int X, int Z);
 }

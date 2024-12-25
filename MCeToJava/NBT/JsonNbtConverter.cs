@@ -1,5 +1,4 @@
 ﻿using MCeToJava.Exceptions;
-using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
@@ -11,18 +10,25 @@ internal static class JsonNbtConverter
 	{
 		Dictionary<string, object> value = [];
 		foreach (var entry in tag.Value)
+		{
 			value[entry.Key] = Convert(entry.Value);
+		}
 
 		return new NbtMap(value);
 	}
 
 	public static NbtList Convert(ListJsonNbtTag tag)
 	{
+		if (tag.Value.Count == 0)
+		{
+			throw new ArgumentException($"{nameof(tag)} cannot be empty.", nameof(tag));
+		}
+
 		List<object> value = [];
 		foreach (JsonNbtTag item in tag.Value)
+		{
 			value.Add(Convert(item));
-
-		Debug.Assert(value.Count > 0);
+		}
 
 		return new NbtList(NbtType.FromClass(value[0].GetType()), value);
 	}
@@ -48,23 +54,29 @@ internal static class JsonNbtConverter
 	[JsonDerivedType(typeof(StringJsonNbtTag), "string")]
 	public abstract class JsonNbtTag
 	{
-		[JsonConverter(typeof(JsonStringEnumConverter))]
-		public enum TagType
-		{
-			[EnumMember(Value = "compound")] COMPOUND,
-			[EnumMember(Value = "list")] LIST,
-			[EnumMember(Value = "int")] INT,
-			[EnumMember(Value = "byte")] BYTE,
-			[EnumMember(Value = "float")] FLOAT,
-			[EnumMember(Value = "string")] STRING
-		}
-
-		public TagType Type { get; }
-
 		protected JsonNbtTag(TagType type)
 		{
 			Type = type;
 		}
+
+		[JsonConverter(typeof(JsonStringEnumConverter))]
+		public enum TagType
+		{
+			[EnumMember(Value = "compound")]
+			COMPOUND,
+			[EnumMember(Value = "list")]
+			LIST,
+			[EnumMember(Value = "int")]
+			INT,
+			[EnumMember(Value = "byte")]
+			BYTE,
+			[EnumMember(Value = "float")]
+			FLOAT,
+			[EnumMember(Value = "string")]
+			STRING,
+		}
+
+		public TagType Type { get; }
 	}
 
 	public sealed class CompoundJsonNbtTag : JsonNbtTag

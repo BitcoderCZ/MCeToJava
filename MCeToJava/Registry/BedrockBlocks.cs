@@ -9,11 +9,12 @@ namespace MCeToJava.Registry;
 
 internal static class BedrockBlocks
 {
-	private static readonly Dictionary<BlockNameAndState, int> stateToIdMap = [];
-	private static readonly Dictionary<int, BlockNameAndState> idToStateMap = [];
-	private static readonly Dictionary<string, int> nameToId = [];
+	private static readonly Dictionary<BlockNameAndState, int> StateToIdMap = [];
+	private static readonly Dictionary<int, BlockNameAndState> IdToStateMap = [];
+	private static readonly Dictionary<string, int> NameToId = [];
 
 	public static int AirId { get; private set; }
+
 	public static int WaterId { get; private set; }
 
 	public static void Load(JsonArray root)
@@ -36,14 +37,14 @@ internal static class BedrockBlocks
 			}
 
 			BlockNameAndState blockNameAndState = new BlockNameAndState(name, state);
-			if (!stateToIdMap.TryAdd(blockNameAndState, id))
+			if (!StateToIdMap.TryAdd(blockNameAndState, id))
 			{
 				Log.Warning($"[registry] Duplicate Bedrock block name/state {name}");
 			}
 
-			nameToId.TryAdd(name, id);
+			NameToId.TryAdd(name, id);
 
-			if (!idToStateMap.TryAdd(id, blockNameAndState))
+			if (!IdToStateMap.TryAdd(id, blockNameAndState))
 			{
 				Log.Warning($"[registry] Duplicate Bedrock block ID {id}");
 			}
@@ -52,7 +53,7 @@ internal static class BedrockBlocks
 		AirId = GetId("minecraft:air", []);
 		Dictionary<string, object> hashMap = new()
 		{
-			["liquid_depth"] = 0
+			["liquid_depth"] = 0,
 		};
 		WaterId = GetId("minecraft:water", hashMap);
 	}
@@ -60,23 +61,23 @@ internal static class BedrockBlocks
 	public static int GetId(string name)
 		=> name == "fountain:solid_air"
 			? Chunk.SolidAirId
-			: nameToId.GetOrDefault(name, -1);
+			: NameToId.GetOrDefault(name, -1);
 
 	public static int GetId(string name, Dictionary<string, object> state)
 	{
 		BlockNameAndState blockNameAndState = new BlockNameAndState(name, state);
-		return stateToIdMap.GetOrDefault(blockNameAndState, -1);
+		return StateToIdMap.GetOrDefault(blockNameAndState, -1);
 	}
 
 	public static string? GetName(int id)
-		=> idToStateMap.TryGetValue(id, out var blockNameAndState)
+		=> IdToStateMap.TryGetValue(id, out var blockNameAndState)
 		? blockNameAndState.Name
 		: null;
 
 	// not needed
 	public static Dictionary<string, object>? GetState(int id)
 	{
-		if (idToStateMap.TryGetValue(id, out var blockNameAndState))
+		if (IdToStateMap.TryGetValue(id, out var blockNameAndState))
 		{
 			Dictionary<string, object> state = [];
 			foreach (var item in blockNameAndState.State)
@@ -95,7 +96,7 @@ internal static class BedrockBlocks
 	// not needed
 	public static NbtMap? GetStateNbt(int id)
 	{
-		if (!idToStateMap.TryGetValue(id, out var blockNameAndState))
+		if (!IdToStateMap.TryGetValue(id, out var blockNameAndState))
 		{
 			return null;
 		}
@@ -139,13 +140,16 @@ internal static class BedrockBlocks
 
 		public override int GetHashCode()
 		{
-			unchecked // Overflow is fine, just wrap
+			// TODO: use HashCode?
+
+			// Overflow is fine, just wrap
+			unchecked
 			{
 				int hash = 17 * Name.GetHashCode();
 				foreach (var kvp in State)
 				{
-					hash = hash * 23 + kvp.Key.GetHashCode();
-					hash = hash * 23 + (kvp.Value?.GetHashCode() ?? 0);
+					hash = (hash * 23) + kvp.Key.GetHashCode();
+					hash = (hash * 23) + (kvp.Value?.GetHashCode() ?? 0);
 				}
 
 				return hash;

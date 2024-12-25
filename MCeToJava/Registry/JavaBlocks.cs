@@ -7,13 +7,13 @@ namespace MCeToJava.Registry;
 
 internal static class JavaBlocks
 {
-	private static readonly Dictionary<int, string> javaIdToNameAndState = [];
+	private static readonly Dictionary<int, string> JavaIdToNameAndState = [];
 
-	private static readonly Dictionary<int, string> bedrockIdToNameAndState = [];
+	private static readonly Dictionary<int, string> BedrockIdToNameAndState = [];
 
-	private static readonly Dictionary<string, string> nameToDefaultNameAndState = [];
+	private static readonly Dictionary<string, string> NameToDefaultNameAndState = [];
 
-	private static readonly Dictionary<int, BedrockMapping> bedrockIdToBedrockMapping = [];
+	private static readonly Dictionary<int, BedrockMapping> BedrockIdToBedrockMapping = [];
 
 	public static void Load(JsonArray vanillaRoot, JsonArray nonvanillaRoot)
 	{
@@ -23,7 +23,7 @@ internal static class JavaBlocks
 			int id = obj["id"]!.GetValue<int>();
 			string nameAndSate = obj["name"]!.GetValue<string>();
 
-			if (!javaIdToNameAndState.TryAdd(id, nameAndSate))
+			if (!JavaIdToNameAndState.TryAdd(id, nameAndSate))
 			{
 				Log.Warning($"[registry] Duplicate Java block ID {id}");
 			}
@@ -37,10 +37,10 @@ internal static class JavaBlocks
 					continue;
 				}
 
-				bedrockIdToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
-				bedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
+				BedrockIdToNameAndState.TryAdd(bedrockMapping.Id, nameAndSate);
+				BedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
 				int bracketIndex = nameAndSate.IndexOf('[');
-				nameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate[..bracketIndex], nameAndSate);
+				NameToDefaultNameAndState.TryAdd(bracketIndex == -1 ? nameAndSate : nameAndSate[..bracketIndex], nameAndSate);
 			}
 			catch (BedrockMappingFailException ex)
 			{
@@ -75,8 +75,8 @@ internal static class JavaBlocks
 						continue;
 					}
 
-					bedrockIdToNameAndState.TryAdd(bedrockMapping.Id, baseName);
-					bedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
+					BedrockIdToNameAndState.TryAdd(bedrockMapping.Id, baseName);
+					BedrockIdToBedrockMapping.TryAdd(bedrockMapping.Id, bedrockMapping);
 				}
 				catch (BedrockMappingFailException ex)
 				{
@@ -86,7 +86,30 @@ internal static class JavaBlocks
 		}
 	}
 
-	/// <exception cref="BedrockMappingFailException"></exception>
+	// not needed
+	public static string? GetName(int javaId)
+		=> JavaIdToNameAndState.TryGetValue(javaId, out string? name) ? name : null;
+
+	public static string? GetNameAndState(int bedrockId)
+	{
+		if (BedrockIdToNameAndState.TryGetValue(bedrockId, out string? nameAndState))
+		{
+			return nameAndState;
+		}
+		else
+		{
+			// fallback
+			string? name = BedrockBlocks.GetName(bedrockId);
+			if (!string.IsNullOrEmpty(name) && NameToDefaultNameAndState.TryGetValue(name, out nameAndState))
+			{
+				return nameAndState;
+			}
+		}
+
+		return null;
+	}
+
+	/// <exception cref="BedrockMappingFailException">Thrown when no mapping is found.</exception>
 	private static BedrockMapping? ReadBedrockMapping(JsonObject bedrockMappingObject, JsonArray? javaBlocksArray)
 	{
 		if (bedrockMappingObject.ContainsKey("ignore") && bedrockMappingObject["ignore"]!.GetValue<bool>())
@@ -115,7 +138,7 @@ internal static class JavaBlocks
 		int id = BedrockBlocks.GetId(name, state);
 		if (id == -1)
 		{
-			throw new BedrockMappingFailException("Cannot find Bedrock block with provided name and state");
+			throw new BedrockMappingFailException("Cannot find Bedrock block with provided name and state.StyleCop.Analyzers");
 		}
 
 		bool waterlogged = bedrockMappingObject.ContainsKey("waterlogged") && bedrockMappingObject["waterlogged"]!.GetValue<bool>();
@@ -229,29 +252,6 @@ internal static class JavaBlocks
 		}
 
 		return new BedrockMapping(id, waterlogged, blockEntity, extraData);
-	}
-
-	// not needed
-	public static string? GetName(int javaId)
-		=> javaIdToNameAndState.TryGetValue(javaId, out string? name) ? name : null;
-
-	public static string? GetNameAndState(int bedrockId)
-	{
-		if (bedrockIdToNameAndState.TryGetValue(bedrockId, out string? nameAndState))
-		{
-			return nameAndState;
-		}
-		else
-		{
-			// fallback
-			string? name = BedrockBlocks.GetName(bedrockId);
-			if (!string.IsNullOrEmpty(name) && nameToDefaultNameAndState.TryGetValue(name, out nameAndState))
-			{
-				return nameAndState;
-			}
-		}
-
-		return null;
 	}
 
 	internal sealed class BedrockMapping
