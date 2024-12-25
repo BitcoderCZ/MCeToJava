@@ -11,6 +11,7 @@ internal static partial class EntityConverter
 {
 	private static class Chicken
 	{
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Must match a delegate signature.")]
 		public static void Convert(Entity entity, CompoundTag tag)
 		{
 			tag.Add(new IntTag("EggLayTime", Random.Shared.Next(6000, 12000)));

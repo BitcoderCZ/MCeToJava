@@ -1,4 +1,4 @@
-﻿// <copyright file="JsonConverter_float3.cs" company="BitcoderCZ">
+﻿// <copyright file="JsonConverter_double3.cs" company="BitcoderCZ">
 // Copyright (c) BitcoderCZ. All rights reserved.
 // </copyright>
 

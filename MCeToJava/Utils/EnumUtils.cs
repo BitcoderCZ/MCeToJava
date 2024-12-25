@@ -1,4 +1,8 @@
-﻿using System.Diagnostics;
+﻿// <copyright file="EnumUtils.cs" company="BitcoderCZ">
+// Copyright (c) BitcoderCZ. All rights reserved.
+// </copyright>
+
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace MCeToJava.Utils;
