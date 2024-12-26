@@ -110,10 +110,10 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 
 						if (result.IsFailed)
 						{
-							task.Value = task.MaxValue;
 							failedFiles.Add((path, result));
 						}
 
+						task.Value = task.MaxValue;
 						task.StopTask();
 						filesTask.Increment(1);
 

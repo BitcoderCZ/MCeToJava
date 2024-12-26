@@ -278,8 +278,6 @@ internal static partial class Converter
 		options.Logger.Information($"Filling region files with empty chunks");
 		await FillWithAirChunks(worldData, task, buildplate.Offset.Y, options.Biome, options.Logger).ConfigureAwait(false);
 
-		task?.Increment(1);
-
 		switch (options.ConvertTarget)
 		{
 			case ConvertTarget.Java:
@@ -475,11 +473,6 @@ internal static partial class Converter
 			}
 		}
 
-		if (task is not null)
-		{
-			task.MaxValue += numbRegionFiles;
-		}
-
 		BlockChunk emptyChunk = new BlockChunk(0, 0);
 
 		// 16x256x16
@@ -574,7 +567,7 @@ internal static partial class Converter
 				}
 			}
 
-			task?.Increment(1);
+			task?.Increment(1d / numbRegionFiles);
 
 			return ValueTask.CompletedTask;
 		}).ConfigureAwait(false);
