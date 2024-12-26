@@ -25,7 +25,7 @@ internal static class JsonNbtConverter
 	{
 		if (tag.Value.Count == 0)
 		{
-			throw new ArgumentException($"{nameof(tag)} cannot be empty.", nameof(tag));
+			return new NbtList(NbtType.BYTE, []);
 		}
 
 		List<object> value = [];

@@ -22,7 +22,7 @@ internal sealed class NbtList : IList
 
 	public NbtList(NbtType tagClass, params object[] array)
 	{
-		ArgumentNullException.ThrowIfNull(Type, "tagClass");
+		ArgumentNullException.ThrowIfNull(tagClass);
 		Type = tagClass;
 		_array = (Array)array.Clone();
 	}

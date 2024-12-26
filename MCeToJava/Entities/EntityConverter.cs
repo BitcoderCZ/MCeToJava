@@ -73,6 +73,7 @@ internal static partial class EntityConverter
 		["genoa:viler_witch"] = "minecraft:witch",
 		["genoa:skeleton_wolf"] = "minecraft:wolf",
 		["genoa:bouldering_zombie"] = "minecraft:zombie",
+		["genoa:lobber_zombie"] = "minecraft:zombie",
 	}.ToFrozenDictionary();
 
 	// list of the custom mobs currently supported by fountain
