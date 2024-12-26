@@ -31,6 +31,6 @@ internal class Program
 		};
 #endif
 
-		return CommandParser.ParseAndRun(args, new ParseOptions(), null, [typeof(ConvertCommand), typeof(ConvertDirCommand)]);
+		return CommandParser.ParseAndRun(args, new ParseOptions(), null, [typeof(ConvertCommand), typeof(ConvertDirCommand), typeof(ConvertAllCommand)]);
 	}
 }

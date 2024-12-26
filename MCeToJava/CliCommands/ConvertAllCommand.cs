@@ -1,4 +1,4 @@
-﻿// <copyright file="ConvertDirCommand.cs" company="BitcoderCZ">
+﻿// <copyright file="ConvertAllCommand.cs" company="BitcoderCZ">
 // Copyright (c) BitcoderCZ. All rights reserved.
 // </copyright>
 
@@ -10,14 +10,14 @@ using Serilog.Core;
 
 namespace MCeToJava.CliCommands;
 
-[CommandName("convert-dir")]
-[HelpText("Converts all Project Earth (Minecraft Earth) buildplates in a directory to a Java worlds.")]
-internal sealed class ConvertDirCommand : ConsoleCommand
+[CommandName("convert-all")]
+[HelpText("Converts multiple Project Earth (Minecraft Earth) buildplates to a Java worlds.")]
+internal sealed class ConvertAllCommand : ConsoleCommand
 {
 	[Required]
-	[Argument("in-dir")]
-	[HelpText("Path to the directory containing buildplate jsons, no files besides buildplates should be in this directory.")]
-	public string InDir { get; set; } = string.Empty;
+	[Argument("files")]
+	[HelpText("Paths to the buildplate jsons.")]
+	public string[] Files { get; set; } = [];
 
 	[Argument("out-dir")]
 	[HelpText("Path of the directory that the converted worlds will be placed into.")]
@@ -39,26 +39,15 @@ internal sealed class ConvertDirCommand : ConsoleCommand
 	{
 		try
 		{
-			string[] files;
-			try
+			if (Files.Length == 0)
 			{
-				files = Directory.GetFiles(InDir);
-			}
-			catch (Exception ex)
-			{
-				Log.Error($"Failed to get files: {ex}");
-				return ErrorCode.UnknownError;
-			}
-
-			if (files.Length == 0)
-			{
-				Log.Information("No files in directory");
+				Log.Information("No files specified.");
 				return ErrorCode.Success;
 			}
 
 			var options = new Converter.Options(Logger.None, ConvertTarget, Biome, WorldName);
 
-			return Converter.ConvertFiles(files, OutDir, options).ConfigureAwait(false).GetAwaiter().GetResult();
+			return Converter.ConvertFiles(Files, OutDir, options).ConfigureAwait(false).GetAwaiter().GetResult();
 		}
 		catch (Exception ex)
 		{

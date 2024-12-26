@@ -14,6 +14,7 @@ using Serilog;
 using SharpNBT;
 using Spectre.Console;
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
@@ -38,6 +39,105 @@ internal static partial class Converter
 	public static readonly int NumbProgressStages = 9;
 
 	private static bool registryInitialized = false;
+
+	public static async Task<int> ConvertFiles(string[] files, string outDir, Options options)
+	{
+		if (!Directory.Exists(outDir))
+		{
+			try
+			{
+				Directory.CreateDirectory(outDir);
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Failed to create out-dir: {ex}");
+				return ErrorCode.UnknownError;
+			}
+		}
+
+		try
+		{
+			InitRegistry(Log.Logger);
+		}
+		catch (Exception ex)
+		{
+			Log.Error($"Failed to initialize block registry: {ex}");
+			return ErrorCode.UnknownError;
+		}
+
+		ConcurrentBag<(string Path, Result Result)> failedFiles = [];
+
+		SemaphoreSlim semaphore = new SemaphoreSlim(Math.Max(Environment.ProcessorCount - 1, 1));
+
+		await AnsiConsole.Progress()
+			.Columns(
+				new TaskDescriptionColumn(),
+				new ProgressBarColumn(),
+				new PercentageColumn(),
+				new RemainingTimeColumn(),
+				new SpinnerColumn())
+			.StartAsync(async ctx =>
+			{
+				var filesTask = ctx.AddTask("Convert buildplates", maxValue: files.Length);
+
+				await Task.WhenAll(files.Select(async (path, index) =>
+				{
+					await semaphore.WaitAsync().ConfigureAwait(false);
+
+					string fileName = Path.GetFileName(path);
+					if (string.IsNullOrWhiteSpace(fileName) || fileName.Length == 0)
+					{
+						failedFiles.Add((path, Result.Fail(new ErrorCodeError($"Invalid file name '{fileName}'.", ErrorCode.UnknownError))));
+
+						filesTask.Increment(1);
+						semaphore.Release();
+						return;
+					}
+
+					var task = ctx.AddTaskBefore(fileName, filesTask, autoStart: false, maxValue: NumbProgressStages);
+
+					Result result = await ConvertFile(path, Path.Combine(outDir, fileName + ".zip"), task, options).ConfigureAwait(false);
+
+					if (result.IsFailed)
+					{
+						failedFiles.Add((path, result));
+					}
+
+					task.Value = task.MaxValue;
+					task.StopTask();
+					filesTask.Increment(1);
+
+					semaphore.Release();
+				})).ConfigureAwait(false);
+			});
+
+		if (failedFiles.Count > 0)
+		{
+			Console.WriteLine($"Failed to convert {failedFiles.Count} buildplate{(failedFiles.Count == 1 ? string.Empty : "s")}:");
+			Console.WriteLine();
+
+			foreach (var (path, result) in failedFiles)
+			{
+				Console.WriteLine($"{Path.GetFileName(path)} - {string.Join("; ", result.Errors.Select(static err =>
+				{
+					return err.Reasons.Count == 0
+					? ErrorToString(err)
+					: ErrorToString(err) + ": " + string.Join(", ", err.Reasons.Select(err => ErrorToString(err)));
+				}))}");
+			}
+
+			return ErrorCode.UnknownError;
+		}
+
+		return ErrorCode.Success;
+
+		static string ErrorToString(IError error)
+		{
+			return error is ExceptionalError ex
+				? ex.Exception.ToString()
+				: error.Message;
+		}
+	}
 
 	public static async Task<Result> ConvertFile(string? inPath, string outPath, ProgressTask? task, Options options)
 	{
