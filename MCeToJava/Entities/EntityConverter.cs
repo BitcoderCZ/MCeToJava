@@ -39,6 +39,7 @@ internal static partial class EntityConverter
 		["genoa:umbra_cow"] = "minecraft:cow",
 		["genoa:wooly_cow"] = "minecraft:cow",
 		["genoa:rabbit"] = "minecraft:rabbit",
+		["genoa:furnace_golem"] = "minecraft:iron_golem",
 		["genoa:jolly_llama"] = "minecraft:llama",
 		["genoa:dried_mud_pig"] = "minecraft:pig", // the page redirects to normal Muddy Pig, so I'm not sure if this is even real
 		["genoa:mottled_pig"] = "minecraft:pig",
@@ -62,11 +63,16 @@ internal static partial class EntityConverter
 		["genoa:rainbow_sheep"] = "minecraft:sheep",
 		["genoa:rocky_sheep"] = "minecraft:sheep",
 		["genoa:horned_sheep"] = "minecraft:sheep",
+		["genoa:genoa_slime"] = "minecraft:slime", // assuming these are just normal slimes
+		["genoa:genoa_slime_half"] = "minecraft:slime",
+		["genoa:genoa_slime_quarter"] = "minecraft:slime",
+		["genoa:tropical_slime"] = "minecraft:slime",
 		["genoa:melon_golem"] = "minecraft:snow_golem",
 		["genoa:bone_spider"] = "minecraft:spider",
 		["genoa:glow_squid"] = "minecraft:squid",
 		["genoa:viler_witch"] = "minecraft:witch",
 		["genoa:skeleton_wolf"] = "minecraft:wolf",
+		["genoa:bouldering_zombie"] = "minecraft:zombie",
 	}.ToFrozenDictionary();
 
 	// list of the custom mobs currently supported by fountain

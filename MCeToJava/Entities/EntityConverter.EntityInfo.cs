@@ -5,6 +5,7 @@
 using MCeToJava.Models.MCE;
 using SharpNBT;
 using System.Collections.Frozen;
+using System.Diagnostics;
 
 namespace MCeToJava.Entities;
 
@@ -16,13 +17,18 @@ internal static partial class EntityConverter
 		{
 			["minecraft:chicken"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 4f, Chicken.Convert),
 			["minecraft:cow"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 10f),
+			["minecraft:creeper"] = new(EntityCategories.Mob, 20f, Creeper.Convert),
+			["minecraft:iron_golem"] = new(EntityCategories.CanAngry | EntityCategories.Mob, 100f, IronGolem.Convert),
 			["minecraft:llama"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 15f, Llama.Convert),
+			["minecraft:ocelot"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 6f, Ocelot.Convert),
 			["minecraft:parrot"] = new(EntityCategories.CanTame | EntityCategories.Mob, 6f, Parrot.Convert),
 			["minecraft:pig"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 10f, Pig.Convert),
+			["minecraft:polar_bear"] = new(EntityCategories.CanAngry | EntityCategories.CanBreed | EntityCategories.Mob, 30f),
 			["minecraft:rabbit"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 3f, Rabbit.Convert),
 			["minecraft:salmon"] = new(EntityCategories.Mob, 3f, Salmon.Convert),
 			["minecraft:sheep"] = new(EntityCategories.CanBreed | EntityCategories.Mob, 8f, Sheep.Convert),
 			["minecraft:skeleton"] = new(EntityCategories.Mob, 20f, Skeleton.Convert),
+			["minecraft:slime"] = new(EntityCategories.Mob, 4f, Slime.Convert),
 			["minecraft:snow_golem"] = new(EntityCategories.Mob, 4f, SnowGolem.Convert),
 			["minecraft:spider"] = new(EntityCategories.Mob, 16f, Spider.Convert),
 			["minecraft:squid"] = new(EntityCategories.Mob, 10f),
