@@ -5,3 +5,5 @@ A program to convert Project earth (Minecraft Earth) builplates into java worlds
 `MceToJava convert builplate.json --biome="snowy_plains"`
 
 `MceToJava convert-dir buildplates converted`
+
+`MceToJava convert-all "abc.json,def.json" converted`
