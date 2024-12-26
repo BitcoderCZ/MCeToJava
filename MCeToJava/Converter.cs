@@ -265,6 +265,8 @@ internal static partial class Converter
 			worldData.AddNBTToRegion(pos.X, pos.Y, "region", chunk.ToTag(options.Biome, true, options.Logger));
 		}
 
+		task?.Increment(1);
+
 		options.Logger.Information($"Converting entities");
 		foreach (var (pos, chunk) in entityChunks)
 		{

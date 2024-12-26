@@ -63,7 +63,9 @@ internal static partial class EntityConverter
 		["genoa:rocky_sheep"] = "minecraft:sheep",
 		["genoa:horned_sheep"] = "minecraft:sheep",
 		["genoa:melon_golem"] = "minecraft:snow_golem",
+		["genoa:bone_spider"] = "minecraft:spider",
 		["genoa:glow_squid"] = "minecraft:squid",
+		["genoa:viler_witch"] = "minecraft:witch",
 		["genoa:skeleton_wolf"] = "minecraft:wolf",
 	}.ToFrozenDictionary();
 
