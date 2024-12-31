@@ -59,9 +59,8 @@ internal sealed class BlockChunk
 			["xPos"] = new IntTag("xPos", ChunkX),
 			["zPos"] = new IntTag("zPos", ChunkZ),
 
-			["Status"] = new StringTag("Status", updateBlocks ? "minecraft:spawn" : "minecraft:full"), // "minecraft:spawn" - "proto chunk", needed for PostProcessing
+			["Status"] = new StringTag("Status", updateBlocks ? "minecraft:features" : "minecraft:full"), // "minecraft:features" - "proto chunk", needed for PostProcessing and light
 			["DataVersion"] = new IntTag("DataVersion", 3700),
-			["isLightOn"] = new ByteTag("isLightOn", 1),
 		};
 
 		ListTag sections = new ListTag("sections", TagType.Compound);
@@ -75,9 +74,12 @@ internal sealed class BlockChunk
 				["Y"] = new ByteTag("Y", unchecked((byte)i)),
 			};
 
-			byte[] skylight = GC.AllocateUninitializedArray<byte>(2048);
-			Array.Fill<byte>(skylight, 255);
-			section["SkyLight"] = new ByteArrayTag("SkyLight", skylight);
+			if (!updateBlocks)
+			{
+				byte[] skylight = GC.AllocateUninitializedArray<byte>(2048);
+				Array.Fill<byte>(skylight, 255);
+				section["SkyLight"] = new ByteArrayTag("SkyLight", skylight);
+			}
 
 			if (i != -5 && i != 20)
 			{
