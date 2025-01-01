@@ -628,7 +628,7 @@ internal static partial class Converter
 				}
 			}
 
-			int index = data.Length;
+			uint index = (uint)data.Length;
 			Array.Resize(ref data, data.Length + (numbChunksToAdd * RegionUtils.ChunkSize));
 
 			if (numbChunksToAdd == 0)
@@ -654,11 +654,12 @@ internal static partial class Converter
 					zlibStream.Write(chunkData);
 					zlibStream.Flush();
 
-					int paddedLength = RegionUtils.GetPaddedLength((int)compressedStream.Length);
+					uint paddedLength = RegionUtils.CalculatePaddedLength((uint)compressedStream.Length);
 
+					// resize if needed
 					if (index + paddedLength > data.Length)
 					{
-						Array.Resize(ref data, data.Length + Math.Max(paddedLength, RegionUtils.RegionSize * 8));
+						Array.Resize(ref data, data.Length + Math.Max((int)paddedLength, RegionUtils.RegionSize * 8));
 					}
 
 					RegionUtils.WriteRawChunkData(data, compressedStream, index, RegionUtils.CompressionTypeZlib, x, z);

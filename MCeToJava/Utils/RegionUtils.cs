@@ -36,7 +36,7 @@ internal static class RegionUtils
 		=> (localZ << 5) | localX;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static int GetPaddedLength(int chunkDataLength)
+	public static uint CalculatePaddedLength(uint chunkDataLength)
 	{
 		chunkDataLength += 5; // header
 		return chunkDataLength % ChunkSize == 0 ? chunkDataLength : chunkDataLength + (ChunkSize - (chunkDataLength % ChunkSize));
@@ -65,7 +65,7 @@ internal static class RegionUtils
 
 		int offset = (BinaryPrimitives.ReadInt32BigEndian(dataSpan[(chunkIndex * 4)..]) >> 8) * ChunkSize;
 
-		int length = BinaryPrimitives.ReadInt32BigEndian(dataSpan[offset..]);
+		int length = BinaryPrimitives.ReadInt32BigEndian(dataSpan[offset..]) - 1;
 		compressionType = dataSpan[offset + 4];
 
 		return regionData.Slice(offset + 5, length);
@@ -129,7 +129,7 @@ internal static class RegionUtils
 		}
 	}
 
-	public static void WriteRawChunkData(Span<byte> regionData, Stream chunkData, int index, byte compressionType, int localX, int localZ)
+	public static void WriteRawChunkData(Span<byte> regionData, Stream chunkData, uint index, byte compressionType, int localX, int localZ)
 	{
 		ValidateLocalCoords(localX, localZ);
 
@@ -140,18 +140,18 @@ internal static class RegionUtils
 
 		int chunkIndex = LocalToIndex(localX, localZ);
 
-		int dataLength = checked((int)chunkData.Length);
+		uint dataLength = checked((uint)chunkData.Length);
 		Debug.Assert(index + dataLength + 5 <= regionData.Length, $"There should be enough space in {nameof(regionData)} to fit {nameof(chunkData)} starting at {index}");
-		int paddedLength = GetPaddedLength(dataLength);
+		uint paddedLength = CalculatePaddedLength(dataLength);
 
-		BinaryPrimitives.WriteInt32BigEndian(regionData[(chunkIndex * 4)..], ((index / ChunkSize) << 8) | paddedLength / ChunkSize);
-		BinaryPrimitives.WriteInt32BigEndian(regionData[((chunkIndex * 4) + TimestampOffset)..], (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+		BinaryPrimitives.WriteUInt32BigEndian(regionData[(chunkIndex * 4)..], ((index / ChunkSize) << 8) | paddedLength / ChunkSize);
+		BinaryPrimitives.WriteUInt32BigEndian(regionData[((chunkIndex * 4) + TimestampOffset)..], (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
-		BinaryPrimitives.WriteInt32BigEndian(regionData[index..], dataLength);
-		regionData[index + 4] = compressionType;
+		BinaryPrimitives.WriteUInt32BigEndian(regionData[(int)index..], dataLength + 1);
+		regionData[(int)index + 4] = compressionType;
 
 		chunkData.Position = 0;
-		chunkData.Read(regionData.Slice(index + 5, dataLength));
+		chunkData.Read(regionData.Slice((int)index + 5, (int)dataLength));
 	}
 
 	public static void WriteChunkNBT(ref byte[] regionData, CompoundTag chunkNBT, int localX, int localZ)
@@ -174,10 +174,10 @@ internal static class RegionUtils
 		writer.WriteTag(chunkNBT);
 		zlib.Flush();
 
-		int dataLength = checked((int)ms.Length);
-		int paddedLength = GetPaddedLength(dataLength);
+		uint dataLength = checked((uint)ms.Length);
+		uint paddedLength = CalculatePaddedLength(dataLength);
 
-		int index;
+		uint index;
 		if (regionData.Length == 0)
 		{
 			regionData = new byte[HeaderLength + paddedLength];
@@ -188,7 +188,7 @@ internal static class RegionUtils
 			byte[] newRegionData = new byte[regionData.Length + paddedLength];
 			Buffer.BlockCopy(regionData, 0, newRegionData, 0, regionData.Length);
 
-			index = regionData.Length;
+			index = (uint)regionData.Length;
 
 			regionData = newRegionData;
 		}
